@@ -5,7 +5,7 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 
-import {XH, HoistService} from '@xh/hoist/core';
+import {XH} from '@xh/hoist/core';
 import {ExportFormat} from '@xh/hoist/cmp/grid';
 import {fmtDate} from '@xh/hoist/format';
 import {Icon} from '@xh/hoist/icon';
@@ -17,8 +17,7 @@ import {isFunction, isNil, isString, orderBy, uniq} from 'lodash';
  * Exports Grid data to either Excel or CSV via Hoist's server-side export capabilities.
  * @see HoistColumn API for options to control exported values and formats.
  */
-@HoistService
-export class GridExportService {
+export class BaseGridExportService {
 
     /**
      * Export a GridModel to a file. Typically called via `GridModel.exportAsync()`.

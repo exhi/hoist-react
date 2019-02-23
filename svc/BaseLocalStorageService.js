@@ -5,12 +5,11 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 
-import {XH, HoistService} from '@xh/hoist/core';
+import {XH} from '@xh/hoist/core';
 import {throwIf} from '@xh/hoist/utils/js';
 import store from 'store2';
 
-@HoistService
-export class LocalStorageService {
+export class BaseLocalStorageService {
     _supported = !store.isFake();
 
     get(key, defaultValue) {

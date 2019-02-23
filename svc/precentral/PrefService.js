@@ -8,62 +8,31 @@ import {debounce, isNil, isEqual, isEmpty, pickBy, map, cloneDeep, forEach} from
 import {XH, HoistService} from '@xh/hoist/core';
 import {SECONDS} from '@xh/hoist/utils/datetime';
 import {throwIf, deepFreeze} from '@xh/hoist/utils/js';
+import {BasePrefService} from '../BasePrefService';
 
-// TODO update to support Hoist Central
-
-/**
- * Service to read and set user-specific preference values.
- *
- * Server-side preference support is provided by hoist-core. Preferences must be predefined on the
- * server (they can be managed via the Admin console) and are referenced by their string key. They
- * are assigned default values that apply to users who have yet to have a value set that is specific
- * to their account. Once set, however, the user will get their customized value instead of the
- * default going forwards.
- *
- * This could happen via an explicit option the user adjusts, or happen transparently based on a
- * natural user action or component integration (e.g. collapsing or resizing a `Resizable` that has
- * been configured with preference support).
- *
- * Preferences are persisted automatically back to the server by default so as to follow their user
- * across workstations. A `local` flag can be set on the preference definition, however, to persist
- * user values to local storage instead. This should be used for prefs that are more natural to
- * associate with a particular machine or browser (e.g. sizing or layout related options).
- */
 @HoistService
-export class PrefService {
+export class PrefService extends BasePrefService {
 
     _data = {};
     _updates = {};
     _localStorageKey = 'localPrefs';
 
     constructor() {
+        super();
         const pushFn = () => this.pushPendingAsync();
         window.addEventListener('unload', pushFn);
         this.pushPendingBuffered = debounce(pushFn, 5 * SECONDS);
     }
 
     async initAsync() {
-        return this.loadPrefsAsync();
+        await this.loadPrefsAsync();
+        return super.initAsync();
     }
 
-    /**
-     * Return true if a given preference has been *defined*.
-     * @param key
-     */
     hasKey(key) {
         return this._data.hasOwnProperty(key);
     }
 
-    /**
-     * Get the value for a given key, either the user-specific value (if set) or the default.
-     * Typically accessed via convenience alias `XH.getPref()`.
-     *
-     * @param {string} key
-     * @param {*} [defaultValue] - value to return if the preference key is not found - i.e.
-     *      the config has not been created on the server - instead of throwing. Use sparingly!
-     *      In general it's better to not provide defaults here, but instead keep entries up-to-date
-     *      via the Admin client and have it be obvious when one is missing.
-     */
     get(key, defaultValue) {
         const data = this._data;
         let ret = defaultValue;
@@ -76,19 +45,6 @@ export class PrefService {
         return ret;
     }
 
-    /**
-     * Set a preference value for the current user.
-     * Typically accessed via convenience alias `XH.setPref()`.
-     *
-     * Values are validated client-side to ensure they (probably) are of the correct data type.
-     *
-     * Values are saved to the server (or local storage) in an asynchronous and debounced manner.
-     * See pushAsync() and pushPendingAsync()
-     *
-     * @param {string} key
-     * @param {*} value - the new value to save.
-     * @fires PrefService#prefChange - if the preference value was actually modified.
-     */
     set(key, value) {
         this.validateBeforeSet(key, value);
 
@@ -105,33 +61,16 @@ export class PrefService {
         this.pushPendingBuffered();
     }
 
-    /**
-     * Set a preference value for the current user, and immediately trigger a sync to the server.
-     *
-     * Useful when important to verify that the preference has been fully round-tripped - e.g.
-     * before making another call that relies on its updated value being read on the server.
-     *
-     * @param key
-     * @param value
-     * @returns {Promise}
-     */
     async pushAsync(key, value) {
         this.validateBeforeSet(key, value);
         this.set(key, value);
         return this.pushPendingAsync();
     }
 
-    /**
-     * Reset all *local* preferences, reverting their effective values back to defaults.
-     */
     clearLocalValues() {
         XH.localStorageService.remove(this._localStorageKey);
     }
 
-    /**
-     * Reset *all* preferences, reverting their effective values back to defaults.
-     * @returns {Promise} - resolves when preferences have been cleared and defaults reloaded.
-     */
     async clearAllAsync() {
         this.clearLocalValues();
         await XH.fetchJson({
@@ -141,12 +80,6 @@ export class PrefService {
         return this.loadPrefsAsync();
     }
 
-    /**
-     * Push any pending buffered updates to persist newly set values to server or local storage.
-     * Called automatically by this app on page unload to avoid dropping changes when e.g. a user
-     * changes and option and then immediately hits a (browser) refresh.
-     * @returns {Promise}
-     */
     async pushPendingAsync() {
         const updates = this._updates;
 
@@ -181,12 +114,10 @@ export class PrefService {
     //  Implementation
     //-------------------
     async loadPrefsAsync() {
-        const data = {
-            xhAdminActivityChartSize: {local: true, type: "json", value: null, defaultValue: {}},
-            xhForceEnvironmentFooter: {local: false, type: "bool", value: false, defaultValue: false},
-            xhIdleDetectionDisabled: {local: true, type: "bool", value: null, defaultValue: false},
-            xhTheme: {local: true, type: "string", value: null, defaultValue: "light"},
-        };
+        const data = await XH.fetchJson({
+            url: 'xh/getPrefs',
+            params: {clientUsername: XH.getUsername()}
+        });
         forEach(data, v => {
             deepFreeze(v.value);
             deepFreeze(v.defaultValue);
@@ -272,25 +203,4 @@ export class PrefService {
                 return false;
         }
     }
-
-    /**
-     * Fired when preference changed.
-     *
-     * @event PrefService#prefChange
-     * @type {Object}
-     * @property {string} key - preference key / identifier that was changed
-     * @property {*} value - the new, just-set value
-     * @property {*} oldValue - the prior value
-     */
-
-    /**
-     * Fired when a batch of preferences updates have been pushed to storage (either local, or server).
-     *
-     * @event PrefService#prefsPushed
-     * @type {Object}
-     * @property {Object[]} prefs - list of preferences that were pushed
-     * @property {string} prefs[].key - preference key / identifier that was changed
-     * @property {*} prefs[].value - the new, just-set value
-     */
-
 }

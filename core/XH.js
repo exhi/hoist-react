@@ -15,17 +15,17 @@ import {never, wait, allSettled} from '@xh/hoist/promise';
 import {throwIf} from '@xh/hoist/utils/js';
 
 import {
-    AuthService,
-    ConfigService,
-    EnvironmentService,
-    FetchService,
-    GridExportService,
-    IdentityService,
-    IdleService,
-    LocalStorageService,
-    PrefService,
-    TrackService
-} from '@xh/hoist/svc';
+    AuthService as PcAuthService,
+    ConfigService as PcConfigService,
+    EnvironmentService as PcEnvironmentService,
+    FetchService as PcFetchService,
+    GridExportService as PcGridExportService,
+    IdentityService as PcIdentityService,
+    IdleService as PcIdleService,
+    LocalStorageService as PcLocalStorageService,
+    PrefService as PcPrefService,
+    TrackService as PcTrackService
+} from '@xh/hoist/svc/precentral';
 
 import {
     AuthService as HcAuthService,
@@ -38,7 +38,7 @@ import {
     LocalStorageService as HcLocalStorageService,
     PrefService as HcPrefService,
     TrackService as HcTrackService
-} from '@xh/hoist/svc-central';
+} from '@xh/hoist/central';
 
 import {AppContainerModel} from './appcontainer/AppContainerModel';
 import {RouterModel} from './RouterModel';
@@ -88,25 +88,25 @@ class XHClass {
     //---------------------------
     // Hoist Services
     //---------------------------
-    /** @member {AuthService} */
+    /** @member {BaseAuthService} */
     authService;
-    /** @member {ConfigService} */
+    /** @member {BaseConfigService} */
     configService;
-    /** @member {EnvironmentService} */
+    /** @member {BaseEnvironmentService} */
     environmentService;
-    /** @member {FetchService} */
+    /** @member {BaseFetchService} */
     fetchService;
-    /** @member {GridExportService} */
+    /** @member {BaseGridExportService} */
     gridExportService;
-    /** @member {IdentityService} */
+    /** @member {BaseIdentityService} */
     identityService;
-    /** @member {IdleService} */
+    /** @member {BaseIdleService} */
     idleService;
-    /** @member {LocalStorageService} */
+    /** @member {BaseLocalStorageService} */
     localStorageService;
-    /** @member {PrefService} */
+    /** @member {BasePrefService} */
     prefService;
-    /** @member {TrackService} */
+    /** @member {BaseTrackService} */
     trackService;
 
     //---------------------------
@@ -121,8 +121,10 @@ class XHClass {
     setPref(key, val)           {return this.prefService.set(key, val)}
     getEnv(key)                 {return this.environmentService.get(key)}
 
-    getUser()                   {return this.identityService ? this.identityService.getUser() : null}
-    getUsername()               {return this.identityService ? this.identityService.getUsername() : null}
+
+    // TODO: Consider making getters?
+    getUser()                   {return this.identityService ? this.identityService.user : null}
+    getUsername()               {return this.identityService ? this.identityService.username : null}
 
     get isMobile()              {return this.appSpec.isMobile}
     get clientAppName()         {return this.appSpec.clientAppName}
@@ -476,8 +478,11 @@ class XHClass {
 
             this.setAppState(S.PRE_AUTH);
 
-            // Check if user has already been authenticated (prior login, SSO)...
+            // Check if user logged in or can be on-the-fly authenticated (prior login, SSO)
             if (!await this.authService.isAuthenticatedAsync()) {
+
+                throwIf(!appSpec.authLoginEnabled, 'Failed SSO Login, no alternative form of login available.');
+
                 this.setAppState(S.LOGIN_REQUIRED);
                 return;
             }
@@ -536,16 +541,16 @@ class XHClass {
     getServiceImpls() {
         const isHc = this.appSpec.useHoistCentral;
         return {
-            AuthService: isHc ? HcAuthService : AuthService,
-            ConfigService: isHc ? HcConfigService : ConfigService,
-            EnvironmentService: isHc ? HcEnvironmentService : EnvironmentService,
-            FetchService: isHc ? HcFetchService : FetchService,
-            GridExportService: isHc ? HcGridExportService : GridExportService,
-            IdentityService: isHc ? HcIdentityService : IdentityService,
-            IdleService: isHc ? HcIdleService : IdleService,
-            LocalStorageService: isHc ? HcLocalStorageService : LocalStorageService,
-            PrefService: isHc ? HcPrefService : PrefService,
-            TrackService: isHc ? HcTrackService : TrackService
+            AuthService:            isHc ? HcAuthService : PcAuthService,
+            ConfigService:          isHc ? HcConfigService : PcConfigService,
+            EnvironmentService:     isHc ? HcEnvironmentService : PcEnvironmentService,
+            FetchService:           isHc ? HcFetchService : PcFetchService,
+            GridExportService:      isHc ? HcGridExportService : PcGridExportService,
+            IdentityService:        isHc ? HcIdentityService : PcIdentityService,
+            IdleService:            isHc ? HcIdleService : PcIdleService,
+            LocalStorageService:    isHc ? HcLocalStorageService : PcLocalStorageService,
+            PrefService:            isHc ? HcPrefService : PcPrefService,
+            TrackService:           isHc ? HcTrackService : PcTrackService
         };
     }
 
@@ -561,29 +566,6 @@ class XHClass {
             const ret = checkAccess(user);
             return isBoolean(ret) ? {hasAccess: ret} : ret;
         }
-    }
-
-    async getAuthStatusFromServerAsync() {
-        return (this.appSpec.authSSOEnabled);
-    }
-
-    /////
-    // Authenticated info
-    /////
-    get username() {
-        return XH.authService.username;
-    }
-
-    get apparentUsername() {
-        return XH.authService.apparentUsername;
-    }
-
-    get roles() {
-        return XH.authService.roles;
-    }
-
-    hasRole(role) {
-        return XH.roles.includes(role)
     }
 
 

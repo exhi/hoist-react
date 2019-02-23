@@ -4,7 +4,7 @@
  *
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
-import {AppState, HoistService, XH} from '@xh/hoist/core';
+import {AppState, XH} from '@xh/hoist/core';
 import {MINUTES} from '@xh/hoist/utils/datetime';
 import {Timer} from '@xh/hoist/utils/async';
 import {debounce} from 'lodash';
@@ -22,16 +22,15 @@ import {debounce} from 'lodash';
  *
  * Not currently supported / enabled for mobile clients.
  */
-@HoistService
-export class IdleService {
+export class BaseIdleService {
 
     ACTIVITY_EVENTS = ['keydown', 'mousemove', 'mousedown', 'scroll'];
 
     constructor() {
-        // this.addReaction({
-        //     when: () => XH.appIsRunning,
-        //     run: this.startMonitoring
-        // });
+        this.addReaction({
+            when: () => XH.appIsRunning,
+            run: this.startMonitoring
+        });
     }
 
     //------------------------

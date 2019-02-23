@@ -4,8 +4,6 @@
  *
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
-import {XH, HoistService} from '@xh/hoist/core';
-import {throwIf, deepFreeze} from '@xh/hoist/utils/js';
 
 /**
  * Service to read soft-configuration values.
@@ -22,15 +20,7 @@ import {throwIf, deepFreeze} from '@xh/hoist/utils/js';
  * Note that this service does *not* currently attempt to reload or update configs once the client
  * application has loaded. A refresh of the application is required to load new entries.
  */
-@HoistService
-export class ConfigService {
-
-    _data = {};
-
-    async initAsync() {
-        this._data = await XH.fetchJson({url: 'xh/getConfig'});
-        deepFreeze(this._data);
-    }
+export class BaseConfigService {
 
     /**
      * Get the configured value for a given key. Typically accessed via `XH.getConf()` alias.
@@ -41,15 +31,5 @@ export class ConfigService {
      *      In general it's better to not provide defaults here, but instead keep entries up-to-date
      *      via the Admin client and have it be obvious when one is missing.
      */
-    get(key, defaultValue) {
-        const data = this._data;
-
-        if (data.hasOwnProperty(key)) {
-            return data[key];
-        }
-
-        throwIf(defaultValue === undefined, `Config key not found: '${key}'`);
-        return defaultValue;
-    }
-
+    get(key, defaultValue) {}
 }

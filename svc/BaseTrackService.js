@@ -4,11 +4,10 @@
  *
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
-import {XH, HoistService} from '@xh/hoist/core';
+import {XH} from '@xh/hoist/core';
 import {stripTags} from '@xh/hoist/utils/js';
 
-@HoistService
-export class TrackService {
+export class BaseTrackService {
 
     /**
      * Primary service for tracking any activity that an application's admins want to track.
@@ -36,8 +35,7 @@ export class TrackService {
 
         const params = {
             msg: stripTags(msg),
-            clientUsername: username,
-            scope: XH.clientAppName
+            clientUsername: username
         };
 
         try {
@@ -53,8 +51,8 @@ export class TrackService {
 
             console.log(consoleMsg);
 
-            XH.postJson({
-                url: 'tracks',
+            XH.fetchJson({
+                url: 'xh/track',
                 params: params
             });
         } catch (e) {

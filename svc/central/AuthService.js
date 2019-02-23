@@ -5,40 +5,57 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 import {XH, HoistService} from '@xh/hoist/core';
-import {Exception} from '@xh/hoist/exception';
-import {throwIf} from '@xh/hoist/utils/js';
 import {SECONDS} from '@xh/hoist/utils/datetime';
+import {BaseAuthService} from '../AuthService';
 
-/**
- * Manage authorization using tokens.
- */
 @HoistService
-export class AuthService {
+export class AuthService extends BaseAuthService {
 
-    username = null;
-    apparentUsername = null;
-    roles = [];
-
-    /** Return true if authenticated and throws exception otherwise. */
     async isAuthenticatedAsync() {
-        const {appSpec} = XH;
+        const {authSSOEnabled} = XH.appSpec;
 
-        if (!await this.getAccessTokenAsync()) {
-            if (appSpec.authSSOEnabled) {
-                return this.loginSsoAsync();
-            } else {
-                throwIf(!appSpec.authLoginEnabled, 'Failed SSO Login, no alternative form of login available.');
-                return false;
-            }
-        }
-        return true;
+        return await this.getAccessTokenAsync() ||
+            (authSSOEnabled && await this.ensureLoggedInSsoAsync());
     }
+
+    async loginAsync(username, password) {
+        try {
+            const token = await XH.fetchService.postJsonForm({
+                url: 'auth/login',
+                params: {username, password},
+                service: 'hoist-central',
+                skipAuth: true
+            });
+            this.saveTokenGrant(token);
+            return true;
+        } catch (e) {
+            if (e.httpStatus != 401) throw e;
+        }
+        return false;
+    }
+
+    async logoutAsync() {
+        this.clearTokenGrant();
+        await XH.fetchJson({
+            url: 'auth/logout',
+            service: 'hoist-central'
+        });
+        XH.reloadApp();
+    }
+
+    //---------------------
+    // Implementation
+    //---------------------
+    accessTokenPromise = null;
+
+    accessToken = null;
+    expires = 0;
 
     /**
      * Attempt SSO authentication and return true if authenticated and throw exception otherwise.
      * Save auth token info into local storage if authenticated.
      */
-    async loginSsoAsync() {
+    async ensureLoggedInSsoAsync() {
         return XH
             .fetchJson({
                 url: 'auth/sso',
@@ -56,59 +73,6 @@ export class AuthService {
             });
     }
 
-    /**
-     * Attempt form based authentication and return access token if authenticated and throw exception otherwise
-     * Save auth token info into local storage if authenticated.
-     */
-    async loginAsync(username, password) {
-        return XH.fetchService
-            .postJsonForm({
-                url: 'auth/login',
-                params: {username, password},
-                service: 'hoist-central',
-                skipAuth: true
-            })
-            .thenAction(r => {
-                this.warning = r.accessToken ? '' : 'Login Incorrect';
-                if (r.accessToken) {
-                    this.saveTokenGrant(r);
-                }
-                return r.accessToken;
-            })
-            .catchDefault({
-                hideParams: ['password']
-            });
-    }
-
-    /**
-     * For applications that support a logout operation (i.e. not SSO), logs the current user out
-     * and refreshes the application to present a login panel.
-     */
-    async logoutAsync() {
-        this.clearTokenGrant();
-        return await XH
-            .fetchJson({
-                url: 'auth/logout',
-                service: 'hoist-central'
-            })
-            .then(() => {
-                XH.reloadApp()
-            })
-            .catchDefault(() => {
-                XH.reloadApp()
-            });
-    }
-
-    //---------------------
-    // Implementation
-    //---------------------
-
-    accessTokenPromise = null;
-
-    accessToken = null;
-    expires = 0;
-
-
     async getAccessTokenAsync() {
         if (!this.accessToken) {
             let tokenGrant = XH.localStorageService.get('tokenGrant');
@@ -119,14 +83,14 @@ export class AuthService {
         if (this.accessToken) {
             const currTime = (new Date()).getTime();
             if (!this.expires || this.expires < currTime) {
-                this.accessTokenPromise = this.retrieveAccessTokenAsync()
+                this.accessTokenPromise = this.retrieveAccessTokenAsync();
             } else if (this.accessTokenPromise == null) {
                 this.accessTokenPromise = (async () => {return this.accessToken;})();
             }
         } else {
-            this.accessTokenPromise = this.retrieveAccessTokenAsync()
+            this.accessTokenPromise = this.retrieveAccessTokenAsync();
         }
-        return this.accessTokenPromise
+        return this.accessTokenPromise;
     }
 
     async retrieveAccessTokenAsync() {
@@ -180,15 +144,9 @@ export class AuthService {
         if (tokenGrant) {
             this.accessToken = tokenGrant.accessToken;
             this.expires = tokenGrant.expires;
-            this.username = tokenGrant.username;
-            this.apparentUsername = tokenGrant.apparentUsername;
-            this.roles = tokenGrant.roles;
         } else {
             this.accessToken = null;
             this.expires = 0;
-            this.username = null;
-            this.apparentUsername = null;
-            this.roles = [];
         }
     }
 }
