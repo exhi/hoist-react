@@ -38,4 +38,8 @@ export class EnvironmentService extends BaseEnvironmentService {
     get(key) {
         return this._data[key];
     }
+
+    async getServiceVersionAsync() {
+        return XH.fetchJson({url: 'xh/version'});
+    }
 }

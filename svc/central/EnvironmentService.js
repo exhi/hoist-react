@@ -17,14 +17,15 @@ export class EnvironmentService extends BaseEnvironmentService {
     _data = {};
     
     async initAsync() {
+        console.log('Environment service not implemented by Hoist Central')
         const serverEnv = {
-            'appCode': 'portfolio',
-            'appName': 'Portfolio',
+            'appCode': 'app',
+            'appName': 'App',
             'appVersion': '1.0-SNAPSHOT',
             'appEnvironment': 'Development',
             'grailsVersion': '3.3.9',
             'javaVersion': '1.8.0_181',
-            'hoistCoreVersion': '6.0-SNAPSHOT'
+            'hoistCoreVersion': '0.0-SNAPSHOT'
         };
 
         // Favor client-side data injected via Webpack build or otherwise determined locally,
@@ -45,5 +46,12 @@ export class EnvironmentService extends BaseEnvironmentService {
 
     get(key) {
         return this._data[key];
+    }
+
+    async getServiceVersionAsync() {
+        return {
+            shouldUpdate: false,
+            appVersion: '0.0.0-SNAPSHOT'
+        };
     }
 }

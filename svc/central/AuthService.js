@@ -6,7 +6,7 @@
  */
 import {XH, HoistService} from '@xh/hoist/core';
 import {SECONDS} from '@xh/hoist/utils/datetime';
-import {BaseAuthService} from '../AuthService';
+import {BaseAuthService} from '../BaseAuthService';
 
 @HoistService
 export class AuthService extends BaseAuthService {
@@ -50,6 +50,8 @@ export class AuthService extends BaseAuthService {
 
     accessToken = null;
     expires = 0;
+    username = null;
+    apparentUsername = null;
 
     /**
      * Attempt SSO authentication and return true if authenticated and throw exception otherwise.
@@ -144,9 +146,13 @@ export class AuthService extends BaseAuthService {
         if (tokenGrant) {
             this.accessToken = tokenGrant.accessToken;
             this.expires = tokenGrant.expires;
+            this.username = tokenGrant.username;
+            this.apparentUsername = tokenGrant.apparentUsername;
         } else {
             this.accessToken = null;
             this.expires = 0;
+            this.username = null;
+            this.apparentUsername = null;
         }
     }
 }

@@ -79,24 +79,7 @@ export class ExceptionHandler {
     async logOnServerAsync({exception, userAlerted, userMessage}) {
         // Fail somewhat silently to avoid letting problems here mask/confuse the underlying problem.
         try {
-            const error = exception ? stringifyErrorSafely(exception) : null,
-                username = XH.getUsername();
-
-            if (!username) {
-                console.warn('Error report cannot be submitted to server - user unknown');
-                return;
-            }
-
-            await XH.fetchJson({
-                url: 'xh/submitError',
-                params: {
-                    error,
-                    msg: userMessage ? stripTags(userMessage) : '',
-                    appVersion: XH.getEnv('appVersion'),
-                    userAlerted,
-                    clientUsername: username
-                }
-            });
+            await XH.errorService.saveError(userMessage, exception, userAlerted);
         } catch (e) {
             console.error('Failed sending error to server:', e);
         }

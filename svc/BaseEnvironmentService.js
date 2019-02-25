@@ -53,4 +53,15 @@ export class BaseEnvironmentService {
             XH.appContainerModel.showUpdateBar(data.appVersion);
         }
     }
+
+    /**
+     * Get version from server.
+     *
+     * Should return values:
+     *   shouldUpdate
+     *   appVersion
+     *
+     * @returns {Promise<void>}
+     */
+    async getServiceVersionAsync() {}
 }

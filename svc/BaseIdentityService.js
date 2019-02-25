@@ -51,6 +51,40 @@ export class BaseIdentityService {
 
     }
 
+    /**
+     * Begin an impersonation session to act as another user. Throws exception unless
+     * the authenticated user has the HOIST_ADMIN role and is attempting to impersonate
+     * a known user who has permission to and has accessed the app themselves.
+     *
+     * @param {string} username - the user to impersonate
+     */
+    async impersonateAsync(username) {}
+
+    /**
+     * Exit any active impersonation.
+     */
+    async endImpersonateAsync() {}
+
+    /**
+     * Return array of usernames that current user can impersonate.
+     */
+    async getImpersonationTargetsAsync() {}
+
+    //------------------------
+    // Authorization
+    //------------------------
+    /**
+     * Return true if current user has role.
+     */
+    hasRole(role) {}
+
+    /**
+     * Return true if user has gate.
+     *
+     * @param gate
+     * @param user
+     * @returns {boolean}
+     */
     hasGate(gate, user) {
         const gateUsers =  XH.getConf(gate, '').trim(),
             tokens = gateUsers.split(',').map(it => it.trim()),

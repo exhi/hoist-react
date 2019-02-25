@@ -67,28 +67,23 @@ export class ImpersonationBarModel {
      * @param {string} username - the end-user to impersonate
      */
     async impersonateAsync(username) {
-        this.ensurePermission();
-        return XH.fetchJson({
-            url: 'xh/impersonate',
-            params: {
-                username: username
-            }
-        }).then(() => {
-            XH.reloadApp();
-        });
+        return XH.identityService.impersonateAsync(username)
+            .then(() => {
+                XH.reloadApp();
+            });
     }
 
     /**
      * Exit any active impersonation, reloading the app to resume normal day-to-day life as yourself.
      */
     async endImpersonateAsync() {
-        return XH.fetchJson({
-            url: 'xh/endImpersonate'
-        }).then(() => {
-            XH.reloadApp();
-        }).catchDefault({
-            message: 'Failed to end impersonation'
-        });
+        return XH.identityService.endImpersonateAsync()
+            .then(() => {
+                XH.reloadApp();
+            })
+            .catchDefault({
+                message: 'Failed to end impersonation'
+            });
     }
 
     //--------------------
@@ -101,18 +96,9 @@ export class ImpersonationBarModel {
     ensureTargetsLoaded() {
         if (this.targets.length) return;
 
-        XH.fetchJson({
-            url: 'xh/impersonationTargets'
-        }).then(targets => {
-            this.setTargets(targets);
-        }).catchDefault();
-    }
-
-    @action
-    setTargets(targets) {
-        this.targets = targets
-            .map(t => t.username)
-            .filter(t => t !== XH.getUsername())
-            .sort();
+        XH.identityService.getImpersonationTargetsAsync()
+            .thenAction((targets) => {
+                this.targets = targets;
+            });
     }
 }

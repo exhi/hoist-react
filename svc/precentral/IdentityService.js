@@ -22,7 +22,6 @@ export class IdentityService extends BaseIdentityService {
             this._apparentUser = this.createUser(data.apparentUser, data.apparentUserRoles);
             this._authUser = this.createUser(data.authUser, data.authUserRoles);
         }
-        return super.initAsync();
     }
 
     get user() {
@@ -33,9 +32,44 @@ export class IdentityService extends BaseIdentityService {
         return this._authUser;
     }
 
+    hasRole(role) {
+        return this.authUser.hasRole(role);
+    }
+
+    async impersonateAsync(username) {
+        this.ensurePermission();
+        return XH.fetchJson({
+            url: 'xh/impersonate',
+            params: {
+                username: username
+            }
+        });
+    }
+
+    async endImpersonateAsync() {
+        return XH.fetchJson({
+            url: 'xh/endImpersonate'
+        });
+    }
+
+    async getImpersonationTargetsAsync() {
+        return XH.fetchJson({
+            url: 'xh/impersonationTargets'
+        }).then(targets => {
+            return targets
+                .map(t => t.username)
+                .filter(t => t !== XH.getUsername())
+                .sort();
+        });
+    }
+
     //------------------------
     // Implementation
     //------------------------
+    ensurePermission() {
+        throwIf(!this._authUser.canImpersonate, 'User does not have right to impersonate.');
+    }
+
     createUser(user, roles) {
         if (!user) return null;
         user.roles = roles;

@@ -51,18 +51,12 @@ export class FeedbackDialogModel {
     async submitAsync() {
         if (!this.message) this.hide();
 
-        return XH.fetchJson({
-            url: 'xh/submitFeedback',
-            params: {
-                msg: this.message,
-                appVersion: XH.getEnv('appVersion'),
-                clientUsername: XH.getUsername()
-            }
-        }).then(() => {
-            XH.toast({message: 'Your feedback was submitted'});
-            this.hide();
-        }).linkTo(
-            XH.appLoadModel
-        ).catchDefault();
+        return XH.feedbackService.saveFeedback(this.message)
+            .then(() => {
+                XH.toast({message: 'Your feedback was submitted'});
+                this.hide();
+            }).linkTo(
+                XH.appLoadModel
+            ).catchDefault();
     }
 }

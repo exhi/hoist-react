@@ -26,7 +26,6 @@
  */
 export class BasePrefService {
 
-
     /**
      * Check to see if a given preference has been *defined*.
      * @param {string} key

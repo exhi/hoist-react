@@ -18,6 +18,8 @@ import {
     AuthService as PcAuthService,
     ConfigService as PcConfigService,
     EnvironmentService as PcEnvironmentService,
+    ErrorService as PcErrorService,
+    FeedbackService as PcFeedbackService,
     FetchService as PcFetchService,
     GridExportService as PcGridExportService,
     IdentityService as PcIdentityService,
@@ -31,6 +33,8 @@ import {
     AuthService as HcAuthService,
     ConfigService as HcConfigService,
     EnvironmentService as HcEnvironmentService,
+    ErrorService as HcErrorService,
+    FeedbackService as HcFeedbackService,
     FetchService as HcFetchService,
     GridExportService as HcGridExportService,
     IdentityService as HcIdentityService,
@@ -38,7 +42,7 @@ import {
     LocalStorageService as HcLocalStorageService,
     PrefService as HcPrefService,
     TrackService as HcTrackService
-} from '@xh/hoist/central';
+} from '@xh/hoist/svc/central';
 
 import {AppContainerModel} from './appcontainer/AppContainerModel';
 import {RouterModel} from './RouterModel';
@@ -94,6 +98,10 @@ class XHClass {
     configService;
     /** @member {BaseEnvironmentService} */
     environmentService;
+    /** @member {BaseErrorService} */
+    errorService;
+    /** @member {BaseFeedbackService} */
+    feedbackService;
     /** @member {BaseFetchService} */
     fetchService;
     /** @member {BaseGridExportService} */
@@ -125,6 +133,7 @@ class XHClass {
     // TODO: Consider making getters?
     getUser()                   {return this.identityService ? this.identityService.user : null}
     getUsername()               {return this.identityService ? this.identityService.username : null}
+    hasRole(role)                   {return this.identityService ? this.identityService.hasRole(role) : null}
 
     get isMobile()              {return this.appSpec.isMobile}
     get clientAppName()         {return this.appSpec.clientAppName}
@@ -511,7 +520,7 @@ class XHClass {
         this.setAppState(S.INITIALIZING);
         try {
             await this.installServicesAsync(svcs.IdentityService);
-            await this.installServicesAsync(svcs.PrefService, svcs.ConfigService);
+            await this.installServicesAsync(svcs.PrefService, svcs.ConfigService, svcs.ErrorService, svcs.FeedbackService);
             this.initModels();
 
             // Delay to workaround hot-reload styling issues in dev.
@@ -541,16 +550,18 @@ class XHClass {
     getServiceImpls() {
         const isHc = this.appSpec.useHoistCentral;
         return {
-            AuthService:            isHc ? HcAuthService : PcAuthService,
-            ConfigService:          isHc ? HcConfigService : PcConfigService,
-            EnvironmentService:     isHc ? HcEnvironmentService : PcEnvironmentService,
-            FetchService:           isHc ? HcFetchService : PcFetchService,
-            GridExportService:      isHc ? HcGridExportService : PcGridExportService,
-            IdentityService:        isHc ? HcIdentityService : PcIdentityService,
-            IdleService:            isHc ? HcIdleService : PcIdleService,
-            LocalStorageService:    isHc ? HcLocalStorageService : PcLocalStorageService,
-            PrefService:            isHc ? HcPrefService : PcPrefService,
-            TrackService:           isHc ? HcTrackService : PcTrackService
+            AuthService:          isHc ? HcAuthService : PcAuthService,
+            ConfigService:        isHc ? HcConfigService : PcConfigService,
+            EnvironmentService:   isHc ? HcEnvironmentService : PcEnvironmentService,
+            ErrorService:         isHc ? HcErrorService : PcErrorService,
+            FeedbackService:      isHc ? HcFeedbackService : PcFeedbackService,
+            FetchService:         isHc ? HcFetchService : PcFetchService,
+            GridExportService:    isHc ? HcGridExportService : PcGridExportService,
+            IdentityService:      isHc ? HcIdentityService : PcIdentityService,
+            IdleService:          isHc ? HcIdleService : PcIdleService,
+            LocalStorageService:  isHc ? HcLocalStorageService : PcLocalStorageService,
+            PrefService:          isHc ? HcPrefService : PcPrefService,
+            TrackService:         isHc ? HcTrackService : PcTrackService
         };
     }
 
@@ -595,6 +606,7 @@ class XHClass {
                 it.name = svcs[idx].constructor.name;
             });
             const names = errs.map(it => it.name).join(', ');
+            console.log('Got init errors: ' + names);
 
             throw this.exception({
                 message: 'Failed to initialize services: ' + names,
