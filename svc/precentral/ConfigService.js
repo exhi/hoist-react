@@ -16,7 +16,6 @@ export class ConfigService extends BaseConfigService {
     async initAsync() {
         this._data = await XH.fetchJson({url: 'xh/getConfig'});
         deepFreeze(this._data);
-        return super.initAsync();
     }
 
     get(key, defaultValue) {

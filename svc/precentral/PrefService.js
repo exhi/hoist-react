@@ -26,7 +26,6 @@ export class PrefService extends BasePrefService {
 
     async initAsync() {
         await this.loadPrefsAsync();
-        return super.initAsync();
     }
 
     hasKey(key) {
