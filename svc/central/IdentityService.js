@@ -5,19 +5,19 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 import {XH, HoistService} from '@xh/hoist/core';
-import {deepFreeze, throwif} from '@xh/hoist/utils/js';
+import {deepFreeze, throwIf} from '@xh/hoist/utils/js';
 import {BaseIdentityService} from '../BaseIdentityService';
 
 @HoistService
 export class IdentityService extends BaseIdentityService {
 
-    _user = null;
+    _authUser = null;
     _apparentUser = null;
     
     async initAsync() {
         const data = await XH.fetchJson({url: 'identities/' + XH.authService.username});
         if (data.username) {
-            this._apparentUser = this._user = this.createUser(data);
+            this._apparentUser = this._authUser = this.createUser(data);
         }
 
         if (XH.authService.username != XH.authService.apparentUsername) {
@@ -31,7 +31,7 @@ export class IdentityService extends BaseIdentityService {
     }
 
     get authUser() {
-        return this._user;
+        return this._authUser;
     }
 
     hasRole(role) {
@@ -40,24 +40,11 @@ export class IdentityService extends BaseIdentityService {
 
     async impersonateAsync(username) {
         this.ensurePermission();
-        return XH.fetchJson({
-            url: 'auth/impersonate',
-            service: 'hoist-central',
-            params: {
-                username: username
-            }
-        });
+        return XH.authService.impersonateAsync(username);
     }
 
     async endImpersonateAsync() {
-        return XH.fetchJson({
-            url: 'auth/endImpersonate',
-            service: 'hoist-central'
-        }).then(() => {
-            XH.reloadApp();
-        }).catchDefault({
-            message: 'Failed to end impersonation'
-        });
+        return XH.authService.endImpersonateAsync();
     }
 
     async getImpersonationTargetsAsync() {
@@ -66,7 +53,7 @@ export class IdentityService extends BaseIdentityService {
             service: 'hoist-central'
         }).then((users) => {
             return users.map(t => t.username)
-                .filter(t => t !== this._user.username)
+                .filter(t => t !== this._authUser.username)
                 .sort();
         })
     }
@@ -75,13 +62,14 @@ export class IdentityService extends BaseIdentityService {
     // Implementation
     //------------------------
     ensurePermission() {
-        throwIf(!this._user.isHoistAdmin, 'User does not have right to impersonate.');
+        throwIf(!this._authUser.isHoistAdmin, 'User does not have right to impersonate.');
     }
 
     createUser(user) {
         if (!user) return null;
         user.hasRole = (role) => user.roles.includes(role);
         user.isHoistAdmin = user.hasRole('HOIST_ADMIN');
+        user.canImpersonate = user.isHoistAdmin;
         user.hasGate = (gate) => this.hasGate(gate, user);
         return deepFreeze(user);
     }

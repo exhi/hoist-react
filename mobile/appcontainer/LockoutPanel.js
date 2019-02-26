@@ -52,7 +52,7 @@ export class LockoutPanel extends Component {
                 text: 'Logout',
                 omit: !appSpec.authLoginEnabled,
                 onClick: () => {
-                    XH.identityService.logoutAsync();
+                    XH.authService.logoutAsync();
                 }
             })
         );

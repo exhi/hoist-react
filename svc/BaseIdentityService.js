@@ -47,8 +47,7 @@ export class BaseIdentityService {
     //------------------------
     /** Is an impersonation session currently active? */
     get isImpersonating() {
-        return this.authUsername !== this.username;
-
+        return this.authUsername != this.username;
     }
 
     /**

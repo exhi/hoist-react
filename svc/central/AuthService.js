@@ -35,12 +35,20 @@ export class AuthService extends BaseAuthService {
     }
 
     async logoutAsync() {
-        this.clearTokenGrant();
         await XH.fetchJson({
             url: 'auth/logout',
             service: 'hoist-central'
         });
+        this.clearTokenGrant();
         XH.reloadApp();
+    }
+
+    async impersonateAsync(username) {
+        return this.retrieveAccessTokenAsync(username);
+    }
+
+    async endImpersonateAsync() {
+        return this.retrieveAccessTokenAsync('_END');
     }
 
     //---------------------
@@ -95,18 +103,32 @@ export class AuthService extends BaseAuthService {
         return this.accessTokenPromise;
     }
 
-    async retrieveAccessTokenAsync() {
+    async retrieveAccessTokenAsync(username) {
         let tokenGrant = XH.localStorageService.get('tokenGrant');
         if (tokenGrant) {
-            let refreshToken = tokenGrant.refreshToken;
+            const refreshToken = tokenGrant.refreshToken;
+            let url = 'auth/refresh';
+            let params = {
+                refreshToken: refreshToken
+            }
+            let skipAuth = true;
+            if (username) {
+                if (username == '_END') {
+                    // we are ending impersonation
+                    url = 'auth/endImpersonate';
+                } else {
+                    // we are impersonating another user
+                    url = 'auth/impersonate';
+                    params['username'] = username;
+                    skipAuth = false;
+                }
+            }
             try {
                 tokenGrant = await XH.fetchService.postJson({
-                    url: 'auth/refresh',
-                    params: {
-                        refreshToken: refreshToken
-                    },
+                    url: url,
+                    params: params,
                     service: 'hoist-central',
-                    skipAuth: true
+                    skipAuth: skipAuth
                 });
             } catch (e) {
                 tokenGrant = null;

@@ -75,6 +75,7 @@ export class IdentityService extends BaseIdentityService {
         user.roles = roles;
         user.hasRole = (role) => user.roles.includes(role);
         user.isHoistAdmin = user.hasRole('HOIST_ADMIN');
+        user.canImpersonate = user.isHoistAdmin;
         user.hasGate = (gate) => this.hasGate(gate, user);
         return deepFreeze(user);
     }

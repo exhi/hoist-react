@@ -88,7 +88,7 @@ export class AppMenuButton extends Component {
                     text: 'Logout',
                     icon: Icon.logout(),
                     intent: 'danger',
-                    onClick: () => XH.identityService.logoutAsync()
+                    onClick: () => XH.authService.logoutAsync()
                 })
             )
         });

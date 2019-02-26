@@ -67,7 +67,7 @@ export class AppMenuModel extends MenuModel {
             {
                 icon: Icon.logout(),
                 text: 'Logout',
-                action: () => XH.identityService.logoutAsync(),
+                action: () => XH.authService.logoutAsync(),
                 prepareFn: (item) => item.hidden = hideLogoutItem || !XH.appSpec.authLoginEnabled
             }
         ];
