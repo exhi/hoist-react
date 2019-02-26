@@ -5,7 +5,6 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 import {HoistService} from '@xh/hoist/core';
-import {XH} from "../../core";
 import {BaseFeedbackService} from '../BaseFeedbackService';
 
 @HoistService

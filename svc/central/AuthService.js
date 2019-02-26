@@ -7,6 +7,7 @@
 import {XH, HoistService} from '@xh/hoist/core';
 import {SECONDS} from '@xh/hoist/utils/datetime';
 import {BaseAuthService} from '../BaseAuthService';
+import {resolve} from '@xh/hoist/promise';
 
 @HoistService
 export class AuthService extends BaseAuthService {
@@ -95,7 +96,7 @@ export class AuthService extends BaseAuthService {
             if (!this.expires || this.expires < currTime) {
                 this.accessTokenPromise = this.retrieveAccessTokenAsync();
             } else if (this.accessTokenPromise == null) {
-                this.accessTokenPromise = (async () => {return this.accessToken;})();
+                this.accessTokenPromise = resolve(this.accessToken);
             }
         } else {
             this.accessTokenPromise = this.retrieveAccessTokenAsync();
@@ -106,12 +107,10 @@ export class AuthService extends BaseAuthService {
     async retrieveAccessTokenAsync(username) {
         let tokenGrant = XH.localStorageService.get('tokenGrant');
         if (tokenGrant) {
-            const refreshToken = tokenGrant.refreshToken;
-            let url = 'auth/refresh';
-            let params = {
-                refreshToken: refreshToken
-            }
-            let skipAuth = true;
+            const refreshToken = tokenGrant.refreshToken,
+                params = {refreshToken};
+            let url = 'auth/refresh',
+                skipAuth = true;
             if (username) {
                 if (username == '_END') {
                     // we are ending impersonation
@@ -125,10 +124,10 @@ export class AuthService extends BaseAuthService {
             }
             try {
                 tokenGrant = await XH.fetchService.postJson({
-                    url: url,
-                    params: params,
+                    url,
+                    params,
                     service: 'hoist-central',
-                    skipAuth: skipAuth
+                    skipAuth
                 });
             } catch (e) {
                 tokenGrant = null;
@@ -152,14 +151,14 @@ export class AuthService extends BaseAuthService {
         }
         tokenGrant.expires = (new Date()).getTime() + tokenGrant.expiresInMillis - 10 * SECONDS;
         this.setLocal(tokenGrant);
-        this.accessTokenPromise = (async () => {return tokenGrant.accessToken;})();
+        this.accessTokenPromise = resolve(tokenGrant.accessToken);
         return true;
     }
 
     // called from logout
     clearTokenGrant() {
         this.setLocal(null);
-        this.accessTokenPromise = (async () => {return null;})();
+        this.accessTokenPromise = resolve(null);
         return true;
     }
 

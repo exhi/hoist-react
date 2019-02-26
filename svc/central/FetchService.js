@@ -14,7 +14,7 @@ import {BaseFetchService} from '../BaseFetchService';
 export class FetchService extends BaseFetchService {
 
     async fetch(opts) {
-        let {params, method, contentType, url, autoAbortKey, service, skipAuth} = opts;
+        let {params, method, contentType, url, autoAbortKey, skipAuth} = opts;
         throwIf(!url, 'No url specified in call to fetchService.');
 
         // 1) Compute / install defaults

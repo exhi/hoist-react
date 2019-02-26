@@ -5,12 +5,8 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 
-import {XH} from '@xh/hoist/core';
 import {ExportFormat} from '@xh/hoist/cmp/grid';
 import {fmtDate} from '@xh/hoist/format';
-import {Icon} from '@xh/hoist/icon';
-import {throwIf} from '@xh/hoist/utils/js';
-import download from 'downloadjs';
 import {isFunction, isNil, isString, orderBy, uniq} from 'lodash';
 
 /**

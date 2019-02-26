@@ -4,7 +4,7 @@
  *
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
-import {HoistService} from '@xh/hoist/core';
+import {XH, HoistService} from '@xh/hoist/core';
 import {BaseTrackService} from '../BaseTrackService';
 import {stripTags} from '@xh/hoist/utils/js';
 

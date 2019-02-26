@@ -55,7 +55,7 @@ export class IdentityService extends BaseIdentityService {
             return users.map(t => t.username)
                 .filter(t => t !== this._authUser.username)
                 .sort();
-        })
+        });
     }
 
     //------------------------

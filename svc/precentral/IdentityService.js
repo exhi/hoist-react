@@ -5,7 +5,7 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 import {XH, HoistService} from '@xh/hoist/core';
-import {deepFreeze} from '@xh/hoist/utils/js';
+import {deepFreeze, throwIf} from '@xh/hoist/utils/js';
 import {BaseIdentityService} from '../BaseIdentityService';
 
 @HoistService

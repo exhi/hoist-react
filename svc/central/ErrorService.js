@@ -5,9 +5,6 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 import {HoistService} from '@xh/hoist/core';
-import {XH} from "../../core";
-import {stringifyErrorSafely} from '@xh/hoist/exception';
-import {stripTags, withDefault} from '@xh/hoist/utils/js';
 import {BaseErrorService} from '../BaseErrorService';
 
 @HoistService

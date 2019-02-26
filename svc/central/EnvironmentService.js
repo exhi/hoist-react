@@ -17,7 +17,7 @@ export class EnvironmentService extends BaseEnvironmentService {
     _data = {};
     
     async initAsync() {
-        console.log('Environment service not implemented by Hoist Central')
+        console.log('Environment service not implemented by Hoist Central');
         const serverEnv = {
             'appCode': 'app',
             'appName': 'App',
