@@ -2,7 +2,24 @@
 
 ## v20.0.0-SNAPSHOT (unreleased / under development)
 
-* TBD
+### 💥 Breaking Changes
+* The `Label` component from `@xh/hoist/desktop/cmp/input` has been removed.  Applications should 
+   consider using the basic html `label` element instead. 
+* `TabContainer` and `TabContainerModel` are now cross-platform. Apps should update their code
+  to import both from `@xh/hoist/cmp/tab`.
+* `TabContainer.switcherPosition` has been moved to `TabContainerModel`. Please note that changes
+  to `switcherPosition` are not supported on mobile, where the switcher will always appear
+  beneath the container.
+
+### 🎁 New Features
+* Tabs in `TabContainerModel` now support an `icon` property on the desktop.
+* Added column chooser support to mobile Grids. This allows users to toggle column visibility by
+  tapping a list of available columns. Users can also reorder the columns in the list via a drag and
+  drop interface. Pair `GridModel.enableColChooser` with a mobile `colChooserButton` to allow use.
+* Added `DialogPage` to the mobile toolkit. These floating pages do not participate in navigation
+  or routing, and are used for showing fullscreen views outside of the Navigator / TabContainer context.
+* Add new method `markManaged` on `ManagedSupport`.
+
 
 ## v19.0.1 - 2019-02-12
 
