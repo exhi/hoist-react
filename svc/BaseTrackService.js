@@ -21,6 +21,8 @@ export class BaseTrackService {
      * @param {number} [options.elapsed] - time in milliseconds the activity took.
      * @param {string} [options.severity] - importance flag, such as: OK|WARN|EMERGENCY
      *      (errors should be tracked by the ErrorTrackingService, not sent in this TrackService).
+     * @param {LoadSpec} [options.loadSpec] - optional LoadSpec associated with this track.
+     *      If load is an auto-refresh (loadSpec.autoRefresh = true), this tracking will be skipped.
      */
     track(options) {}
 }

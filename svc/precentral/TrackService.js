@@ -5,10 +5,8 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 import {XH, HoistService} from '@xh/hoist/core';
-import {stripTags} from '@xh/hoist/utils/js';
-
 import {BaseTrackService} from '../BaseTrackService';
-
+import {stripTags} from '@xh/hoist/utils/js';
 
 @HoistService
 export class TrackService extends BaseTrackService {
