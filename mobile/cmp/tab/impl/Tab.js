@@ -5,8 +5,9 @@
  * Copyright © 2018 Extremely Heavy Industries Inc.
  */
 import {Component} from 'react';
-import {elem, elemFactory, HoistComponent, refreshContextView} from '@xh/hoist/core';
-import {div} from '@xh/hoist/cmp/layout';
+import {elem, elemFactory, HoistComponent} from '@xh/hoist/core';
+import {refreshContextView} from '@xh/hoist/core/refresh';
+import {page as onsenPage} from '@xh/hoist/kit/onsen';
 import {TabRenderMode} from '@xh/hoist/enums';
 import {TabModel} from '@xh/hoist/cmp/tab';
 
@@ -38,12 +39,12 @@ export class Tab extends Component {
                 (renderMode == TabRenderMode.LAZY && !this.wasActivated)
             )
         ) {
-            // Note: We must render an empty placeholder tab
+            // Note: We must render an empty placeholder Onsen page
             // to work with Onsen's tabbar.
-            return div();
+            return onsenPage();
         }
 
-        const contentElem = content.prototype.render ? elem(content, {flex: 1}) : content({flex: 1});
+        const contentElem = content.prototype.render ? elem(content) : content();
 
         return refreshContextView({
             model: refreshContextModel,

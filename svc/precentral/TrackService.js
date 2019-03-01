@@ -13,6 +13,8 @@ import {BaseTrackService} from '../BaseTrackService';
 @HoistService
 export class TrackService extends BaseTrackService {
     track(options) {
+        if (options.loadSpec && options.loadSpec.isAutoRefresh) return;
+
         let msg = options;
         if (typeof msg !== 'string') {
             msg = options.msg !== undefined ? options.msg : options.message;

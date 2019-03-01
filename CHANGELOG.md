@@ -3,6 +3,10 @@
 ## v20.0.0-SNAPSHOT (unreleased / under development)
 
 ### 💥 Breaking Changes
+* The `@LoadSupport` decorator has been substantially reworked and enhanced from its initial release in v19.  It is no 
+    longer needed on the HoistComponent, but rather should be put directly on the owned HoistModel implementing the 
+    loading. IMPORTANT NOTE: all models should implement `doLoadAsync` rather than `loadAsync`.  
+    Please see `LoadSupport` for more information on this important change.       
 * The `Label` component from `@xh/hoist/desktop/cmp/input` has been removed.  Applications should 
    consider using the basic html `label` element instead. 
 * `TabContainer` and `TabContainerModel` are now cross-platform. Apps should update their code
@@ -10,6 +14,13 @@
 * `TabContainer.switcherPosition` has been moved to `TabContainerModel`. Please note that changes
   to `switcherPosition` are not supported on mobile, where the switcher will always appear
   beneath the container.
+* Mobile `Page` has changed - `Pages` are now wrappers around `Panels` that are designed to be used
+  with a `NavigationModel` or `TabContainer`. `Page` accepts the same props as `Panel`, meaning
+  uses of `loadModel` should be replaced with `mask`.
+* The mobile `AppBar` title is static and defaults to the app name. If you want to display page
+  titles, it is recommended to use the `title` prop on the `Page`.
+* The `LeftRightChooserModel` constructor no longer accepts a `leftSortBy` and `rightSortBy` property.  
+   The implementation of these properties was generally broken.  Use `leftSorted` and `rightSorted` instead.    
 
 ### 🎁 New Features
 * Tabs in `TabContainerModel` now support an `icon` property on the desktop.
@@ -18,8 +29,13 @@
   drop interface. Pair `GridModel.enableColChooser` with a mobile `colChooserButton` to allow use.
 * Added `DialogPage` to the mobile toolkit. These floating pages do not participate in navigation
   or routing, and are used for showing fullscreen views outside of the Navigator / TabContainer context.
-* Add new method `markManaged` on `ManagedSupport`.
-
+* Added new method `markManaged` on `ManagedSupport`.
+* Added new function decorator `debounced`.
+* Added new function `applyMixin` providing support for structured creation of class decorators (mixins). 
+* Added `Panel` to the mobile toolkit, which offers a header element with standardized styling,
+  title, and icon, as well as support for top and bottom toolbars.
+* The mobile `AppBar` has been updated to more closely match the desktop `AppBar`, adding `icon`,
+  `leftItems`, `hideAppMenuButton` and `appMenuButtonProps` props.
 
 ## v19.0.1 - 2019-02-12
 
