@@ -13,8 +13,17 @@ import {BaseFetchService} from '../BaseFetchService';
 @HoistService
 export class FetchService extends BaseFetchService {
 
+    services = {};
+
+    resolveServiceUrl(service) {
+        if (!service || !XH.configService) {
+            return XH.baseUrl;
+        }
+        return XH.getConf('service.' + service + '.baseUrl', XH.baseUrl);
+    }
+
     async fetch(opts) {
-        let {params, method, contentType, url, autoAbortKey, skipAuth} = opts;
+        let {params, method, contentType, url, autoAbortKey, service, skipAuth} = opts;
         throwIf(!url, 'No url specified in call to fetchService.');
 
         // 1) Compute / install defaults
@@ -27,7 +36,7 @@ export class FetchService extends BaseFetchService {
         }
 
         if (!url.startsWith('/') && !url.includes('//')) {
-            url = XH.baseUrl + url;
+            url = this.resolveServiceUrl(service) + url;
         }
 
         // 2) Prepare merged options
