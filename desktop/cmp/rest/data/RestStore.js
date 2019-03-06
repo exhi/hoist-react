@@ -26,6 +26,7 @@ export class RestStore extends UrlStore {
      * @param {?string} [c.dataRoot] - Key of root node for records in returned data object.
      * @param {boolean} [c.reloadLookupsOnLoad] - Whether lookups should be loaded each time
      *      new data is loaded or updated by this client.
+     * @param {?string} [c.service] - Service from which to load data.
      * @param {...*} - Additional arguments to pass to UrlStore.
      */
     constructor({url, dataRoot = 'data', reloadLookupsOnLoad = false, ...urlStoreArgs}) {
@@ -94,7 +95,10 @@ export class RestStore extends UrlStore {
         if (!this._lookupsLoaded || this.reloadLookupsOnLoad) {
             const lookupFields = this.fields.filter(it => !!it.lookupName);
             if (lookupFields.length) {
-                const lookupData = await XH.fetchJson({url: `${this.url}/lookupData`});
+                const lookupData = await XH.fetchJson({
+                    url: `${this.url}` + (XH.useHoistCentral ? '' : '/lookupData'),
+                    service: this.service
+                });
                 lookupFields.forEach(f => {
                     f.lookup = lookupData[f.lookupName];
                 });

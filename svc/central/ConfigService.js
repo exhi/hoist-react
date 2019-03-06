@@ -14,7 +14,7 @@ export class ConfigService extends BaseConfigService {
     _data = {};
 
     async initAsync() {
-        const configs = await XH.fetchJson({url: 'configs/' + XH.environmentService.get('appCode')});
+        const configs = await XH.fetchJson({service: 'hoist-central', url: 'configs/' + XH.environmentService.get('appCode')});
         configs.forEach(config => {
             this._data[config.name] = config.value;
         });

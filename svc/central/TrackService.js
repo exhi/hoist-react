@@ -41,6 +41,7 @@ export class TrackService extends BaseTrackService {
             console.log(consoleMsg);
 
             XH.postJson({
+                service: 'hoist-central',
                 url: 'tracks',
                 params: params
             });

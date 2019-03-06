@@ -40,6 +40,15 @@ export class AboutDialogModel {
             configRows = XH.getConf('xhAboutMenuConfigs', []).map(it => {
                 return row(it.label, XH.getConf(it.key, ''));
             });
+        let serviceRows = [];
+        if (XH.useHoistCentral) {
+            serviceRows = XH.fetchService.getMetrics().map(it => {
+                return row('Service ' + it.service, it.successCount + ' OK and ' +
+                    it.failCount + ' errors' +
+                    (it.wasLastFail ? '!' : '') +
+                    (it.failCount > 0 ? ': ' + it.lastFailMessage : ''));
+            });
+        }
 
         return table({
             item: tbody(
@@ -52,6 +61,7 @@ export class AboutDialogModel {
                 row('Hoist React', svc.get('hoistReactVersion')),
                 row('Build', svc.get('clientBuild')),
                 row('User Agent', window.navigator.userAgent),
+                ...serviceRows,
                 ...configRows
             )
         });

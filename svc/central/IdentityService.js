@@ -15,13 +15,13 @@ export class IdentityService extends BaseIdentityService {
     _apparentUser = null;
     
     async initAsync() {
-        const data = await XH.fetchJson({url: 'identities/' + XH.authService.username});
+        const data = await XH.fetchJson({service: 'hoist-central', url: 'identities/' + XH.authService.username});
         if (data.username) {
             this._apparentUser = this._authUser = this.createUser(data);
         }
 
         if (XH.authService.username != XH.authService.apparentUsername) {
-            const data2 = await XH.fetchJson({url: 'identities/' + XH.authService.apparentUsername});
+            const data2 = await XH.fetchJson({service: 'hoist-central', url: 'identities/' + XH.authService.apparentUsername});
             this._apparentUser = this.createUser(data2);
         }
     }

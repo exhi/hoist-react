@@ -137,6 +137,7 @@ class XHClass {
 
     get isMobile()              {return this.appSpec.isMobile}
     get clientAppName()         {return this.appSpec.clientAppName}
+    get useHoistCentral()       {return this.appSpec.useHoistCentral}
 
     //-------------------------------
     // Models
@@ -548,7 +549,7 @@ class XHClass {
     // Implementation
     //------------------------
     getServiceImpls() {
-        const isHc = this.appSpec.useHoistCentral;
+        const isHc = this.useHoistCentral;
         return {
             AuthService:          isHc ? HcAuthService : PcAuthService,
             ConfigService:        isHc ? HcConfigService : PcConfigService,
