@@ -48,7 +48,7 @@ export class AppMenuButton extends Component {
         hideLogoutItem = hideLogoutItem || !XH.appSpec.authLoginEnabled;
         hideOptionsItem = hideOptionsItem || !XH.acm.optionsDialogModel.hasOptions;
 
-        // TODO:  Need logic from context menu to remove duplicate seperators!
+        // TODO:  Need logic from context menu to remove duplicate separators!
         return popover({
             position: 'bottom-right',
             minimal: true,
@@ -80,6 +80,7 @@ export class AppMenuButton extends Component {
                     omit: hideAdminItem,
                     text: 'Admin',
                     icon: Icon.wrench(),
+                    disabled: XH.useHoistCentral,
                     onClick: () => window.open('/admin')
                 }),
                 menuDivider({omit: hideLogoutItem}),
