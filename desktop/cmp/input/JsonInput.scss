@@ -4,6 +4,7 @@
 }
 
 .xh-json-input {
+  display: flex;
   flex-direction: column;
 
   &.xh-input-invalid {
