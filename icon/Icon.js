@@ -164,6 +164,7 @@ import {
     faUserClock,
     faUsers,
     faWindow,
+    faWindowMinimize,
     faWrench
 } from '@fortawesome/pro-regular-svg-icons';
 
@@ -319,6 +320,7 @@ import {
     faUserClock as faUserClockLight,
     faUsers as faUsersLight,
     faWindow as faWindowLight,
+    faWindowMinimize as faWindowMinimizeLight,
     faWrench as faWrenchLight
 } from '@fortawesome/pro-light-svg-icons';
 
@@ -474,6 +476,7 @@ import {
     faUserClock as faUserClockSolid,
     faUsers as faUsersSolid,
     faWindow as faWindowSolid,
+    faWindowMinimize as faWindowMinimizeSolid,
     faWrench as faWrenchSolid
 } from '@fortawesome/pro-solid-svg-icons';
 
@@ -631,6 +634,7 @@ library.add(
     faUserClock, faUserClockLight, faUserClockSolid,
     faUsers, faUsersLight, faUsersSolid,
     faWindow, faWindowLight, faWindowSolid,
+    faWindowMinimize, faWindowMinimizeLight, faWindowMinimizeSolid,
     faWrench, faWrenchLight, faWrenchSolid
 );
 
@@ -757,6 +761,7 @@ export const Icon = {
     logout(p)           {return fa(p, 'sign-out')},
     mail(p)             {return fa(p, 'envelope')},
     mask(p)             {return fa(p, 'mask')},
+    minimize(p)         {return fa(p, 'window-minimize')},
     moon(p)             {return fa(p, 'moon')},
     news(p)             {return fa(p, 'newspaper')},
     office(p)           {return fa(p, 'building')},
