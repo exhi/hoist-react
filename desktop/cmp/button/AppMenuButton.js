@@ -11,16 +11,19 @@ import {menu, menuItem, menuDivider, popover} from '@xh/hoist/kit/blueprint';
 import {button} from '@xh/hoist/desktop/cmp/button';
 import {getClassName} from '@xh/hoist/utils/react';
 import {Icon} from '@xh/hoist/icon';
+import {isRunningInOpenFin, quitApplication} from '../../../openfin/utils';
 
 export const [AppMenuButton, appMenuButton] = hoistComponent(props => {
     let {hideOptionsItem, hideFeedbackItem, hideThemeItem, hideAdminItem, hideLogoutItem, extraItems} = props;
     extraItems = extraItems ?
-        [...extraItems.map(m => menuItem(m)), menuDivider()]  :
+        [...extraItems.map(m => menuItem(m)), menuDivider()] :
         [];
 
-    hideAdminItem = hideAdminItem || !XH.getUser().isHoistAdmin,
+    hideAdminItem = hideAdminItem || !XH.getUser().isHoistAdmin;
     hideLogoutItem = hideLogoutItem || XH.appSpec.isSSO;
     hideOptionsItem = hideOptionsItem || !XH.acm.optionsDialogModel.hasOptions;
+
+    const isOpenFinApp = isRunningInOpenFin();
 
     // TODO:  Need logic from context menu to remove duplicate seperators!
     return popover({
@@ -64,6 +67,14 @@ export const [AppMenuButton, appMenuButton] = hoistComponent(props => {
                 icon: Icon.logout(),
                 intent: 'danger',
                 onClick: () => XH.identityService.logoutAsync()
+            }),
+            menuDivider({omit: !isOpenFinApp}),
+            menuItem({
+                omit: !isOpenFinApp,
+                icon: Icon.close(),
+                text: 'Quit',
+                intent: 'danger',
+                onClick: () => quitApplication()
             })
         )
     });
