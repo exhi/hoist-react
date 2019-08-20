@@ -13,3 +13,8 @@ export async function getChildWindowsAsync() {
     const app = getApplication();
     return await app.getChildWindows();
 }
+
+export async function showDevToolsForAllChildWindows() {
+    const windows = await getChildWindowsAsync();
+    windows.forEach(win => win.showDeveloperTools());
+}
