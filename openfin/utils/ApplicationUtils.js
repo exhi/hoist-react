@@ -18,3 +18,8 @@ export async function showDevToolsForAllChildWindows() {
     const windows = await getChildWindowsAsync();
     windows.forEach(win => win.showDeveloperTools());
 }
+
+export async function bringAllWindowsToFront() {
+    const windows = await getChildWindowsAsync();
+    windows.forEach(win => win.bringToFront());
+}
