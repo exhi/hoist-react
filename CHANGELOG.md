@@ -34,6 +34,11 @@
   * The method `Store.addData` has been removed. Use `Store.updateData` instead.
 * `Column` takes an additional property `rendererIsComplex`. Application must set this flag to
   `true` to indicate if a column renderer uses values other than its own bound field. This change
+  provides an efficiency boost and also allows the use of agGrid's native `enableCellChangeFlash`
+  option for all simple columns not needing a complex renderer.
+* TabModel has a new prop `contentFn` for use when defining the contents of a Tab as a general
+  factory function. Previously functions could also be provided to the `content` prop, but now that
+  prop must be a Class or a function that is strictly a React Component definition.
   provides an efficiency boost by allowing ag-Grid to use its default change detection instead of
   forcing a cell refresh on any change.
 * `Column` also gets a new `highlightOnChange` config. If true, the grid will highlight the cell on
