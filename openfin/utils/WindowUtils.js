@@ -23,3 +23,7 @@ export function minimizeWindow() {
 export async function createWindowAsync(name, opts) {
     return window.fin.Window.create({name, ...opts});
 }
+
+export async function updateOptionsAsync(opts) {
+    return getWindow().updateOptions(opts);
+}
