@@ -1,6 +1,33 @@
 # Changelog
 
-## v27.0.0-SNAPSHOT - unreleased
+## v28.0.0-SNAPSHOT - Unreleased
+
+### 🎁 New Features
+
+* Hoist now fully supports React functional components and hooks. See the new function
+  `hoistComponent` for more information. While functional components and hooks are considered
+  essential forward-looking patterns in the React world, Class-based Components remain fully
+  supported (by both Hoist and React) using the familiar `@HoistComponent` decorator.
+* The default text input shown by `XH.prompt()` now has `selectOnFocus: true` and will confirm the
+  user's entry on an <enter> keypress (same as clicking 'OK').
+
+### 💥 Breaking Changes
+
+* The `containerRef` argument for `XH.toast()` should now be a DOM element. Component instances are
+  no longer supported types for this value. This is required to support functional Components
+  throughout the toolkit.
+
+[Commit Log](https://github.com/exhi/hoist-react/compare/v27.0.1...develop)
+
+## v27.0.1 - 2019-08-26
+
+### 🐞 Bug Fixes
+
+* Fix to `Store.clear()` and `GridModel.clear()`, which delegates to the same (#1324).
+
+[Commit Log](https://github.com/exhi/hoist-react/compare/v27.0.0...v27.0.1)
+
+## v27.0.0 - 2019-08-23
 
 ### 🎁 New Features
 
@@ -26,12 +53,12 @@
 
 ### 💥 Breaking Changes
 
-* The updating of Store data has been reworked to provide a simpler and more powerful API that
+* The updating of `Store` data has been reworked to provide a simpler and more powerful API that
   allows for the applications of additions, deletions, and updates in a single transaction:
-  * The signature of `Store.updateData` has been substantially changed, and is now the main entry
+  * The signature of `Store.updateData()` has been substantially changed, and is now the main entry
     point for all updates.
-  * The method `Store.removeRecords` has been removed. Use `Store.updateData` instead.
-  * The method `Store.addData` has been removed. Use `Store.updateData` instead.
+  * `Store.removeRecords()` has been removed. Use `Store.updateData()` instead.
+  * `Store.addData()` has been removed. Use `Store.updateData()` instead.
 * `Column` takes an additional property `rendererIsComplex`. Application must set this flag to
   `true` to indicate if a column renderer uses values other than its own bound field. This change
   provides an efficiency boost and also allows the use of agGrid's native `enableCellChangeFlash`
@@ -54,13 +81,20 @@
   agGrid `deltaRowMode`. This is intended to provide the best possible grid performance and
   generally streamline the use of the ag-Grid Api.
 
+### 🐞 Bug Fixes
+
+* Panel resize events are now properly throttled, avoiding extreme lagginess when resizing panels
+  that contain complex components such as big grids.
+* Workaround for issues with the mobile Onsen toolkit throwing errors while resetting page stack.
+* Dialogs call `doCancel()` handler if cancelled via <escape> key.
+
 ### 📚 Libraries
 
 * @xh/hoist-dev-utils `3.7 -> 3.8`
 * qs `6.7 -> 6.8`
 * store2 `2.8 -> 2.9`
 
-[Commit Log](https://github.com/exhi/hoist-react/compare/v26.0.1...develop)
+[Commit Log](https://github.com/exhi/hoist-react/compare/v26.0.1...v27.0.0)
 
 ## v26.0.1 - 2019-08-07
 
