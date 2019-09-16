@@ -35,7 +35,7 @@ import {throwIf} from '@xh/hoist/utils/js';
  * @returns {function} - decorator for a JS class.
  */
 export function applyMixin(C, config) {
-    const {name, includes, defines, defaults, provides, overrides, chains, ...rest} = config;
+    const {name, includes, defines, defaults, provides, overrides, chains, init, ...rest} = config;
     forOwn(rest, (v, k) => {
         throw Exception.create(`Unknown key '${k}' provided to applyMixin.`);
     });
@@ -56,6 +56,17 @@ export function applyMixin(C, config) {
     if (includes) {
         includes.reverse().forEach(decorator => C = decorator(C));
     }
+
+    if (init) {
+        return class extends C {
+            constructor(...args) {
+                super(...args);
+
+                init.apply(this, ...args);
+            }
+        };
+    }
+
     return C;
 }
 
@@ -67,13 +78,13 @@ export function applyMixin(C, config) {
  * Mark a class and its instances with a boolean property set to true.
  *
  * Useful for providing an identifying flag for marking objects.
- * 
+ *
  * @param {String} flag
  */
 function markClass(C, flag) {
 
-    throwIfNameCollision(C, flag,  C);
-    throwIfNameCollision(C.prototype, flag,  C);
+    throwIfNameCollision(C, flag, C);
+    throwIfNameCollision(C.prototype, flag, C);
 
     const def = {value: true, writable: false};
     Object.defineProperty(C, flag, def);
@@ -129,7 +140,7 @@ function defaultMethods(C, methods) {
 function provideMethods(C, methods) {
     const proto = C.prototype;
     forOwn(methods, (method, name) => {
-        throwIfNameCollision(proto, name,  C);
+        throwIfNameCollision(proto, name, C);
         installMethod(proto, name, method);
     });
 }

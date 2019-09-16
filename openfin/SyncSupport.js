@@ -3,10 +3,24 @@ import {runInAction} from '../mobx';
 import {applyMixin, throwIf} from '../utils/js';
 import {connectToChannelAsync, createChannelAsync, isRunningInOpenFin} from './utils';
 
-export function SyncSupport(channel) {
+export function SyncSupport(channel, isProvider) {
     return function(C) {
         return applyMixin(C, {
             name: 'SyncSupport',
+
+            init: function() {
+                if (isProvider) {
+                    this.initAsProviderAsync()
+                        .then(() => this.onSyncReady());
+                } else {
+                    this.initAsSubscriberAsync()
+                        .then(() => this.onSyncReady());
+                }
+            },
+
+            defaults: {
+                onSyncReady() {}
+            },
 
             provides: {
                 addSyncAction({action, track, valueFn}) {
