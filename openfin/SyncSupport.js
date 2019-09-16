@@ -1,6 +1,6 @@
-import {forEach, toPairs} from 'lodash';
+import {forEach, isEmpty, isString} from 'lodash';
 import {runInAction} from '../mobx';
-import {applyMixin} from '../utils/js';
+import {applyMixin, throwIf} from '../utils/js';
 import {connectToChannelAsync, createChannelAsync, isRunningInOpenFin} from './utils';
 
 export function SyncSupport(channel) {
@@ -9,6 +9,18 @@ export function SyncSupport(channel) {
             name: 'SyncSupport',
 
             provides: {
+                addSyncAction({action, track, valueFn}) {
+                    throwIf(!this._xhChannelProviderBus, 'Only Providers can add sync actions!');
+                    this.addReaction({
+                        track,
+                        run: (value) => {
+                            value = valueFn ? valueFn(value) : value;
+                            console.debug(`SyncSupport | Publishing Action ${action} - Value: ${value}`);
+                            this._xhChannelProviderBus.publish(action, JSON.stringify({action, value}));
+                        }
+                    });
+                },
+
                 async initAsProviderAsync() {
                     if (!isRunningInOpenFin()) return;
 
@@ -22,16 +34,16 @@ export function SyncSupport(channel) {
                         return;
                     }
 
-                    channelBus.onConnection((identity, payload) => {
-                        console.debug(`SyncSupport Provider | Channel: ${channel} | Connection From ${identity} | Payload:`, payload);
+                    channelBus.onConnection((identity) => {
+                        console.debug(`SyncSupport Provider | Channel: ${channel} | Connection From`, identity);
                     });
 
-                    channelBus.onDisconnection((identity, payload) => {
-                        console.debug(`SyncSupport Provider | Channel: ${channel} | Disconnection From ${identity} | Payload:`, payload);
+                    channelBus.onDisconnection((identity) => {
+                        console.debug(`SyncSupport Provider | Channel: ${channel} | Disconnection From`, identity);
                     });
 
                     channelBus.onError((action, error, identity) => {
-                        console.debug(`SyncSupport Provider | Channel: ${channel} | Error in Action ${action} From ${identity} | Error:`, error);
+                        console.debug(`SyncSupport Provider | Channel: ${channel} | Error in Action ${action} From`, identity, '| Error:', error);
                     });
 
                     console.debug('SyncSupport Provider | Synced Properties:', this, this._xhSyncedProperties);
@@ -42,8 +54,8 @@ export function SyncSupport(channel) {
                         this.addReaction({
                             track: () => this[property],
                             run: (value) => {
-                                console.debug(`SyncSupport | Property ${property} Changed - Dispatching Action ${action} - Value: ${value}`);
-                                channelBus.dispatch(action, JSON.stringify({action, property, value}));
+                                console.debug(`SyncSupport | Property ${property} Changed - Publishing Action ${action} - Value: ${value}`);
+                                channelBus.publish(action, JSON.stringify({action, property, value}));
                             }
                         });
                     });
@@ -61,18 +73,28 @@ export function SyncSupport(channel) {
 
                     if (!channelBus) return;
 
+                    console.debug('SyncSupport | Connected to Channel', channel);
+
                     channelBus.onError((action, error, identity) => {
                         console.debug(`SyncSupport Client | Channel: ${channel} | Error in Action ${action} From ${identity} | Error:`, error);
                     });
 
-                    const actionPropPairs = toPairs(this._xhSyncedProperties);
-                    await actionPropPairs.map(([action, property]) => {
-                        return channelBus.register(action, (payload, identity) => {
-                            console.debug(`SyncSupport | Received Action ${action} | Identity: ${identity} | Payload`, payload);
+                    channelBus.setDefaultAction((action, payload, identity) => {
+                        console.debug('SyncSupport | No handler registered for Action', action, '| Payload:', payload, '| Provider', identity);
+                    });
+
+                    forEach(this._xhSyncedProperties, (property, action) => {
+                        console.debug('SyncSupport | Registering Action', action, 'for Property', property);
+                        const ret = channelBus.register(action, (payload, identity) => {
+                            if (isString(payload) && !isEmpty(payload)) payload = JSON.parse(payload);
+
+                            console.debug(`SyncSupport | Received Action: ${action} | Provider:`, identity, ' | Payload:', payload);
 
                             const {value} = payload;
                             runInAction(() => this[property] = value);
                         });
+
+                        if (!ret) console.warn(`SyncSupport | Failed to register Action ${action} for property ${property}`);
                     });
 
                     this._xhChannelClientBus = channel;
@@ -96,7 +118,7 @@ function addSyncedProperty(target, action, property) {
 }
 
 export function sync(target, property, descriptor) {
-    addSyncedProperty(target, `${property}Changed`, property);
+    addSyncedProperty(target, property, property);
     return descriptor;
 }
 
