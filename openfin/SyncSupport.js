@@ -65,12 +65,10 @@ export function SyncSupport(channel, isProvider) {
                     // Setup reactions to auto-publish value changes of synced properties
                     forEach(this._xhSyncedProperties, (property, action) => {
                         console.debug(`SyncSupport Provider | Linking action ${action} to property ${property}`);
-                        this.addReaction({
-                            track: () => this[property],
-                            run: (value) => {
-                                console.debug(`SyncSupport | Property ${property} Changed - Publishing Action ${action} - Value: ${value}`);
-                                channelBus.publish(action, JSON.stringify({action, property, value}));
-                            }
+                        this.addAutorun(() => {
+                            const value = this[property];
+                            console.debug(`SyncSupport | Property ${property} Changed - Publishing Action ${action} - Value: ${value}`);
+                            channelBus.publish(action, JSON.stringify({action, property, value}));
                         });
                     });
 
