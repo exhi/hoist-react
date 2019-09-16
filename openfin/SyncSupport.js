@@ -23,15 +23,13 @@ export function SyncSupport(channel, isProvider) {
             },
 
             provides: {
-                addSyncAction({action, track, valueFn}) {
+                addSyncProperty({action, property, valueFn}) {
                     throwIf(!this._xhChannelProviderBus, 'Only Providers can add sync actions!');
-                    this.addReaction({
-                        track,
-                        run: (value) => {
-                            value = valueFn ? valueFn(value) : value;
-                            console.debug(`SyncSupport | Publishing Action ${action} - Value: ${value}`);
-                            this._xhChannelProviderBus.publish(action, JSON.stringify({action, value}));
-                        }
+                    if (isEmpty(action)) action = property;
+                    this.addAutorun(() => {
+                        const value = valueFn ?  valueFn() : this[property];
+                        console.debug(`SyncSupport | Property ${property} Changed - Publishing Action ${action} - Value: ${value}`);
+                        this._xhChannelProviderBus.publish(action, JSON.stringify({action, property, value}));
                     });
                 },
 
