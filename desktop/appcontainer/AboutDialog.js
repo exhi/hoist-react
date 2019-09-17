@@ -6,13 +6,13 @@
  */
 
 import {dialog} from '@xh/hoist/kit/blueprint';
-import {XH, hoistElemFactory, useProvidedModel} from '@xh/hoist/core';
+import {XH, hoistCmp, uses} from '@xh/hoist/core';
 import {toolbar} from '@xh/hoist/desktop/cmp/toolbar';
 import {button} from '@xh/hoist/desktop/cmp/button';
 import {Icon} from '@xh/hoist/icon';
 import {frame, filler} from '@xh/hoist/cmp/layout';
 
-import {AboutDialogModel} from '@xh/hoist/core/appcontainer/AboutDialogModel';
+import {AboutDialogModel} from '@xh/hoist/appcontainer/AboutDialogModel';
 import './AboutDialog.scss';
 
 /**
@@ -22,10 +22,11 @@ import './AboutDialog.scss';
  *
  * @private
  */
-export const aboutDialog = hoistElemFactory(
-    props => {
-        const model = useProvidedModel(AboutDialogModel, props);
+export const aboutDialog = hoistCmp.factory({
+    displayName: 'AboutDialog',
+    model: uses(AboutDialogModel),
 
+    render({model}) {
         if (!model.isOpen) return null;
 
         const onClose = () => model.hide();
@@ -54,4 +55,4 @@ export const aboutDialog = hoistElemFactory(
             onClose
         });
     }
-);
+});

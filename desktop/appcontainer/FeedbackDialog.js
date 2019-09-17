@@ -5,13 +5,13 @@
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
 import {dialog} from '@xh/hoist/kit/blueprint';
-import {hoistElemFactory, useProvidedModel} from '@xh/hoist/core';
+import {hoistCmp, uses} from '@xh/hoist/core';
 import {filler} from '@xh/hoist/cmp/layout';
 import {textArea} from '@xh/hoist/desktop/cmp/input';
 import {toolbar} from '@xh/hoist/desktop/cmp/toolbar';
 import {button} from '@xh/hoist/desktop/cmp/button';
 
-import {FeedbackDialogModel} from '@xh/hoist/core/appcontainer/FeedbackDialogModel';
+import {FeedbackDialogModel} from '@xh/hoist/appcontainer/FeedbackDialogModel';
 
 /**
  * A simple dialog component to collect user feedback from directly within the application.
@@ -19,9 +19,11 @@ import {FeedbackDialogModel} from '@xh/hoist/core/appcontainer/FeedbackDialogMod
  *
  * @private
  */
-export const feedbackDialog = hoistElemFactory(
-    props => {
-        const model = useProvidedModel(FeedbackDialogModel, props);
+export const feedbackDialog = hoistCmp.factory({
+    displayName: 'FeedbackDialog',
+    model: uses(FeedbackDialogModel),
+
+    render({model}) {
         if (!model.isOpen) return null;
 
         return dialog({
@@ -37,7 +39,6 @@ export const feedbackDialog = hoistElemFactory(
                     height: 250,
                     style: {marginBottom: 2},
                     commitOnChange: true,
-                    model,
                     bind: 'message'
                 }),
                 toolbar(
@@ -56,4 +57,4 @@ export const feedbackDialog = hoistElemFactory(
             ]
         });
     }
-);
+});

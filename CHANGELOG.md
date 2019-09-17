@@ -2,22 +2,71 @@
 
 ## v28.0.0-SNAPSHOT - Unreleased
 
+_"The one with the hooks."_
+
 ### 🎁 New Features
 
-* Hoist now fully supports React functional components and hooks. See the new function
-  `hoistComponent` for more information. While functional components and hooks are considered
-  essential forward-looking patterns in the React world, Class-based Components remain fully
-  supported (by both Hoist and React) using the familiar `@HoistComponent` decorator.
+* **Hoist now fully supports React functional components and hooks.** See the new function
+  `hoistComponent`, `useLocalModel()`, and `useContextModel()` for more information. (Note that
+  Class-based Components remain fully supported (by both Hoist and React) using the familiar
+  `@HoistComponent` decorator.
+* Hoist components are now be able to read their models from context, allowing a much less verbose
+  specification of application code. Currently only functional components can publish models to
+  context.
 * The default text input shown by `XH.prompt()` now has `selectOnFocus: true` and will confirm the
-  user's entry on an <enter> keypress (same as clicking 'OK').
+  user's entry on an `<enter>` keypress (same as clicking 'OK').
+* `stringExcludes` function added to form validation constraints. This allows an input value to
+  block specific characters or strings, e.g. no slash "/" in a textInput for a filename.
+* `constrainAll` function added to form validation constraints. This takes another constraint as its
+  only argument, and applies that constraint to an array of values, rather than just to one value.
+  This is useful for applying a constraint to inputs that produce arrays, such as tag pickers.
+* `DateInput` will now accept LocalDates as `value`, `minDate` and `maxDate` props.
+* Individual `Buttons` within a `ButtonGroupInput` will accept a disabled prop while continuing to
+  respect the overall `ButtonGroupInput`'s disabled prop.
+* `createObservableRef()` is now available in `@xh/hoist/utils/react` package. Use this function for
+  creating ref's that are functionally equivalent to refs created with `React.createRef()`, yet
+  fully observable. With this change the `Ref` class in the same package is now obsolete.
+* Hoist now establishes a proper react "error boundary" around all application code. This means that
+  errors throw when rendering will be caught and displayed in the standard Hoist exception dialog,
+  and stack traces for rendering errors should be signifigantly less verbose.       
 
 ### 💥 Breaking Changes
 
 * The `containerRef` argument for `XH.toast()` should now be a DOM element. Component instances are
   no longer supported types for this value. This is required to support functional Components
   throughout the toolkit.
+* Apps that need to prevent a `StoreFilterField` from binding to a `GridModel` in context, need 
+  to set the `store` or `gridModel` property explicitly to null. 
+* The Blueprint non-standard decorators `ContextMenuTarget` and `HotkeysTarget` are no longer supported.
+  Use the components `ContextMenuHost` or `HotkeysHost` instead. For convenience, this functionality
+  has also been made available directly on `Panel` via the `contextMenu` and `hotkeys` props.
+      
 
-[Commit Log](https://github.com/exhi/hoist-react/compare/v27.0.1...develop)
+### 🐞 Bug Fixes
+
+* Date picker month and year controls will now work properly in `localDate` mode. (Previously would
+  reset to underlying value.)
+
+### 📚 Libraries
+
+* ag-grid `21.1 -> 21.2`
+
+[Commit Log](https://github.com/exhi/hoist-react/compare/v27.1.0...develop)
+
+## v27.1.0 - 2019-09-05
+
+### 🎁 New Features
+
+* `Column.exportFormat` can now be a function, which supports setting Excel formats on a per-cell
+  (vs. entire column) basis by returning a conditional `exportFormat` based upon the value and / or
+  record.
+  * ⚠️ Note that per-cell formatting _requires_ that apps update their server to use hoist-core
+    v6.3.0+ to work, although earlier versions of hoist-core _are_ backwards compatible with the
+    pre-existing, column-level export formatting.
+* `DataViewModel` now supports a `sortBy` config. Accepts the same inputs as `GridModel.sortBy`,
+  with the caveat that only a single-level sort is supported at this time.
+
+[Commit Log](https://github.com/exhi/hoist-react/compare/v27.0.1...v27.1.0)
 
 ## v27.0.1 - 2019-08-26
 
@@ -50,6 +99,12 @@
 * New `TreeMap` and `SplitTreeMap` components added, to render hierarchical data in a configurable
   TreeMap visualization based on the Highcharts library. Supports optional binding to a GridModel,
   which syncs selection and expand / collapse state.
+* `Column` gets a new `highlightOnChange` config. If true, the grid will highlight the cell on each
+  change by flashing its background. (Currently this is a simple on/off config - future iterations
+  could support a function variant or other options to customize the flash effect based on the
+  old/new values.) A new CSS var `--xh-grid-cell-change-bg-highlight` can be used to customize the
+  color used, app-wide or scoped to a particular grid selector. Note that columns must *not* specify
+  `rendererIsComplex` (see below) if they wish to enable the new highlight flag.
 
 ### 💥 Breaking Changes
 
@@ -68,12 +123,6 @@
   prop must be a Class or a function that is strictly a React Component definition.
   provides an efficiency boost by allowing ag-Grid to use its default change detection instead of
   forcing a cell refresh on any change.
-* `Column` also gets a new `highlightOnChange` config. If true, the grid will highlight the cell on
-  each change by flashing its background. (Currently this is a simple on/off config - future
-  iterations could support a function variant or other options to customize the flash effect based
-  on the old/new values.) A new CSS var `--xh-grid-cell-change-bg-highlight` can be used to
-  customize the color used, app-wide or scoped to a particular grid selector. Note that columns must
-  *not* specify `rendererIsComplex` if they wish to enable the new highlight flag.
 
 ### ⚙️ Technical
 
@@ -86,7 +135,7 @@
 * Panel resize events are now properly throttled, avoiding extreme lagginess when resizing panels
   that contain complex components such as big grids.
 * Workaround for issues with the mobile Onsen toolkit throwing errors while resetting page stack.
-* Dialogs call `doCancel()` handler if cancelled via <escape> key.
+* Dialogs call `doCancel()` handler if cancelled via `<esc>` keypress.
 
 ### 📚 Libraries
 

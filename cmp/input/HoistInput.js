@@ -47,6 +47,8 @@ import './HoistInput.scss';
  */
 export class HoistInput extends Component {
 
+    static supportModelFromContext = true;
+
     static propTypes = {
 
         /**
@@ -91,12 +93,15 @@ export class HoistInput extends Component {
 
         throwIf(props.onKeyPress, "HoistInputs no longer support a 'onKeyPress' property.  Use 'onKeyDown' instead.");
         throwIf(props.field, "HoistInput no longer supports a 'field' property.  Use 'bind' instead.");
+    }
+
+    componentDidMount() {
         this.addReaction({
             track: () => this.externalValue,
             run: (externalVal) => {
                 // Ensure that updates to the external value - are always flushed to the internal value but
                 // only change internal if not already a valid representation of external to avoid flapping
-                if (this.toExternal(this.internalValue) != externalVal) {
+                if (this.externalFromInternal() != externalVal) {
                     this.setInternalValue(this.toInternal(externalVal));
                 }
             },
@@ -126,7 +131,7 @@ export class HoistInput extends Component {
     get renderValue() {
         return this.hasFocus ?
             this.internalValue :
-            this.toInternal(this.externalValue);
+            this.internalFromExternal();
     }
 
     /**
@@ -135,7 +140,8 @@ export class HoistInput extends Component {
      */
     @computed
     get externalValue() {
-        const {value, model, bind} = this.props;
+        const {value, bind} = this.props,
+            {model} = this;
         if (model && bind) {
             return model[bind];
         }
@@ -144,6 +150,7 @@ export class HoistInput extends Component {
 
     @action
     setInternalValue(val) {
+        if (isEqual(val, this.internalValue)) return;
         this.internalValue = val;
     }
 
@@ -166,7 +173,7 @@ export class HoistInput extends Component {
     doCommit() {
         this.doCommitInternal();
         // After explicit commit, we want to fully round-trip external value to get canonical value.
-        this.setInternalValue(this.toInternal(this.externalValue));
+        this.setInternalValue(this.internalFromExternal());
 
     }
 
@@ -180,10 +187,24 @@ export class HoistInput extends Component {
         return external;
     }
 
+    internalFromExternal() {
+        const ret = this.toInternal(this.externalValue);
+
+        // keep references consistent (to prevent unwanted renders)
+        if (isEqual(this.internalValue, ret)) return this.internalValue;
+
+        return ret;
+    }
+
+    externalFromInternal() {
+        return this.toExternal(this.internalValue);
+    }
+
     doCommitInternal() {
-        const {onCommit, model, bind} = this.props;
+        const {onCommit, bind} = this.props,
+            {model} = this;
         let currentValue = this.externalValue,
-            newValue = this.toExternal(this.internalValue);
+            newValue = this.externalFromInternal();
 
         if (isEqual(newValue, currentValue)) return;
 
@@ -233,7 +254,7 @@ export class HoistInput extends Component {
     noteFocused() {
         if (this.hasFocus) return;
 
-        this.setInternalValue(this.toInternal(this.externalValue));
+        this.setInternalValue(this.internalFromExternal());
         this.hasFocus = true;
     }
 
@@ -255,5 +276,4 @@ export class HoistInput extends Component {
 
         return classNames('xh-input', validityClass, disabledClass, this.baseClassName, this.props.className, ...extraClassNames);
     }
-
 }

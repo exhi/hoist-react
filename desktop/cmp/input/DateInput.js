@@ -16,8 +16,8 @@ import {div} from '@xh/hoist/cmp/layout';
 import {textInput} from '@xh/hoist/desktop/cmp/input';
 import {button, buttonGroup} from '@xh/hoist/desktop/cmp/button';
 import {Icon} from '@xh/hoist/icon';
-import {Ref} from '@xh/hoist/utils/react';
-import {LocalDate} from '@xh/hoist/utils/datetime';
+import {createObservableRef} from '@xh/hoist/utils/react';
+import {LocalDate, isLocalDate} from '@xh/hoist/utils/datetime';
 import {warnIf, withDefault} from '@xh/hoist/utils/js';
 import {bindable} from '@xh/hoist/mobx';
 import {HoistInput} from '@xh/hoist/cmp/input';
@@ -40,7 +40,7 @@ export class DateInput extends HoistInput {
 
     static propTypes = {
         ...HoistInput.propTypes,
-        value: PT.instanceOf(Date),
+        value: PT.oneOfType([PT.instanceOf(Date), PT.instanceOf(LocalDate)]),
 
         /** Props passed to ReactDayPicker component, as per DayPicker docs. */
         dayPickerProps: PT.object,
@@ -70,10 +70,10 @@ export class DateInput extends HoistInput {
         rightElement: PT.element,
 
         /** Maximum (inclusive) valid date. */
-        maxDate: PT.instanceOf(Date),
+        maxDate: PT.oneOfType([PT.instanceOf(Date), PT.instanceOf(LocalDate)]),
 
         /** Minimum (inclusive) valid date. */
-        minDate: PT.instanceOf(Date),
+        minDate: PT.oneOfType([PT.instanceOf(Date), PT.instanceOf(LocalDate)]),
 
         /** Text to display when control is empty. */
         placeholder: PT.string,
@@ -111,14 +111,23 @@ export class DateInput extends HoistInput {
 
     @bindable popoverOpen = false;
 
-    inputRef = new Ref();
-    buttonRef = new Ref();
-    popoverRef = new Ref();
+    inputRef = createObservableRef();
+    buttonRef = createObservableRef();
+    popoverRef = createObservableRef();
     baseClassName = 'xh-date-input';
 
     // Prop-backed convenience getters
-    get maxDate() {return this.props.maxDate || moment().add(100, 'years').toDate()}
-    get minDate() {return this.props.minDate || moment().subtract(100, 'years').toDate()}
+    get maxDate() {
+        const {maxDate} = this.props;
+        if (!maxDate) return moment().add(100, 'years').toDate();
+        return isLocalDate(maxDate) ? maxDate.date : maxDate;
+    }
+
+    get minDate() {
+        const {minDate} = this.props;
+        if (!minDate) return moment().subtract(100, 'years').toDate();
+        return isLocalDate(minDate) ? minDate.date : minDate;
+    }
 
     get valueType() {return withDefault(this.props.valueType, 'date')}
     get timePrecision() {return this.valueType === 'localDate' ? null : this.props.timePrecision}
@@ -146,7 +155,7 @@ export class DateInput extends HoistInput {
                 autoFocus: false,
                 enforceFocus: false,
                 position: withDefault(props.popoverPosition, 'auto'),
-                popoverRef: this.popoverRef.ref,
+                popoverRef: this.popoverRef,
                 onClose: this.onPopoverClose,
                 onInteraction: (nextOpenState) => {
                     if (this.props.showPickerOnFocus) {
@@ -179,7 +188,7 @@ export class DateInput extends HoistInput {
                         tabIndex: props.tabIndex,
                         placeholder: props.placeholder,
                         textAlign: props.textAlign,
-                        inputRef: this.inputRef.ref,
+                        inputRef: this.inputRef,
                         ...layoutProps
                     }),
                     onClick: !enableTextInput && !props.disabled ? this.onOpenPopoverClick : null
@@ -209,7 +218,7 @@ export class DateInput extends HoistInput {
                     className: classNames('xh-date-input__picker-icon', enablePicker ? null : 'xh-date-input__picker-icon--disabled'),
                     icon: Icon.calendar(),
                     tabIndex: enableTextInput || disabled ? -1 : undefined,
-                    elementRef: this.buttonRef.ref,
+                    elementRef: this.buttonRef,
                     onClick: enablePicker && !disabled ? this.onOpenPopoverClick : null
                 })
             ]
@@ -232,7 +241,7 @@ export class DateInput extends HoistInput {
      */
     onBlur = () => {
         const activeEl = document.activeElement,
-            popoverEl = this.popoverRef.value,
+            popoverEl = this.popoverRef.current,
             popoverHasFocus = popoverEl && popoverEl.contains(activeEl),
             inputHasFocus = this.containsElement(activeEl);
 
@@ -278,10 +287,10 @@ export class DateInput extends HoistInput {
         this.doCommit();
         if (this.hasFocus) {
             const {inputRef, buttonRef} = this;
-            if (inputRef.value) {
-                inputRef.value.focus();
-            } else if (buttonRef.value) {
-                buttonRef.value.focus();
+            if (inputRef.current) {
+                inputRef.current.focus();
+            } else if (buttonRef.current) {
+                buttonRef.current.focus();
             }
         }
     };
