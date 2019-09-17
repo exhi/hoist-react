@@ -22,5 +22,12 @@ import classNames from 'classnames';
  * @returns {string} - Concatenated space-delimited class name appropriate for html className attribute
  */
 export function getClassName(baseName, props, ...extraNames) {
-    return classNames(baseName, props.className, ...extraNames);
+    const {theme, size, look} = props,
+        styleClasses = [];
+
+    if (theme) styleClasses.push(`xh-theme-${theme}`);
+    if (size) styleClasses.push(`xh-size-${size}`);
+    if (look) styleClasses.push(`xh-look-${look}`);
+
+    return classNames(baseName, props.className, ...styleClasses, ...extraNames);
 }
