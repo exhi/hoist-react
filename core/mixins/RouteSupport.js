@@ -35,11 +35,6 @@ export function RouteSupport({name, path, ...rest}) {
             RouteSupport._xhRoutes.push(route);
         }
 
-        RouteSupport.getRoutes = () => {
-            if (!RouteSupport._xhRoutes) return [];
-            return sortBy(RouteSupport._xhRoutes, 'name');
-        };
-
         return applyMixin(C, {
             name: 'RouteSupport',
 
@@ -69,9 +64,10 @@ export function RouteSupport({name, path, ...rest}) {
                         if (routerState.name.endsWith(name)) {
                             console.debug('ROUTER STATE CHANGED FOR', name, toJS(routerState));
                             runInAction(() => {
+                                const {params} = routerState;
                                 paramNames.forEach(param => {
                                     // TODO: Look for a setter method?
-                                    if (!isEqual(this[param], routerState[param])) this[param] = routerState.params[param];
+                                    if (!isEqual(this[param], params[param])) this[param] = params[param];
                                 });
                             });
                         }
@@ -82,6 +78,11 @@ export function RouteSupport({name, path, ...rest}) {
         });
     };
 }
+
+RouteSupport.getRoutes = () => {
+    if (!RouteSupport._xhRoutes) return [];
+    return sortBy(RouteSupport._xhRoutes, 'name');
+};
 
 export function routeParam(target, property, descriptor) {
     target._xhRouteParams = target._xhRouteParams || [];
