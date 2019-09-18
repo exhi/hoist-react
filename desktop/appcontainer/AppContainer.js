@@ -77,7 +77,7 @@ const appContainerView = hoistCmp.factory({
 
     render({model}) {
         const S = AppState;
-        switch (XH.appState) {
+        switch (model.appState) {
             case S.PRE_AUTH:
             case S.INITIALIZING:
                 return viewport(mask({isDisplayed: true, spinner: true}));
@@ -95,7 +95,7 @@ const appContainerView = hoistCmp.factory({
                         updateBar(),
                         refreshContextView({
                             model: model.refreshContextModel,
-                            item: frame(elem(XH.appSpec.componentClass, {model: XH.appModel}))
+                            item: frame(elem(XH.appSpec.component, {model: XH.appModel}))
                         }),
                         versionBar()
                     ),
@@ -115,10 +115,10 @@ const appContainerView = hoistCmp.factory({
 
 const idleDialog = hoistCmp.factory({
     displayName: 'IdleDialog',
-    render() {
+    render({model}) {
         const dialogClass = XH.appSpec.idleDialogClass || IdleDialog;
 
-        return XH.appState == AppState.SUSPENDED && dialogClass ?
+        return model.appState === AppState.SUSPENDED && dialogClass ?
             elem(dialogClass, {onReactivate: () => XH.reloadApp()}) :
             null;
     }

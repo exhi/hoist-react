@@ -10,7 +10,6 @@ export * from './mixins';
 export * from './hooks';
 export * from './modelspec';
 export * from './AppState';
-export * from './AppSpec';
 export * from './HoistAppModel';
 export * from './HoistComponentFunctional';
 export * from './HoistComponentClass';

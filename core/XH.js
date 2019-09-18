@@ -5,7 +5,7 @@
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
 
-import {AppSpec, AppState, elem, ReactiveSupport} from '@xh/hoist/core';
+import {AppState, elem, ReactiveSupport} from '@xh/hoist/core';
 import {Exception} from '@xh/hoist/exception';
 import {action} from '@xh/hoist/mobx';
 import {never} from '@xh/hoist/promise';
@@ -14,6 +14,7 @@ import {camelCase, flatten, uniqueId} from 'lodash';
 import ReactDOM from 'react-dom';
 
 import {AppContainerModel} from '../appcontainer/AppContainerModel';
+import {AppSpec} from '../appcontainer/AppSpec';
 import {ChildContainerModel} from '../appcontainer/child/ChildContainerModel';
 import {ChildSpec} from '../appcontainer/child/ChildSpec';
 import '../styles/XH.scss';
@@ -68,6 +69,7 @@ class XHClass {
     getUsername()               {return this.identityService ? this.identityService.getUsername() : null}
 
     get appModel()              {return this.appContainerModel.appModel}
+    get appSpec()               {return this.appContainerModel.appSpec}
 
     get isMobile()              {return this.appContainerModel.appSpec.isMobile}
     get clientAppCode()         {return this.appContainerModel.appSpec.clientAppCode}
@@ -201,6 +203,10 @@ class XHClass {
     //-------------------------
     // Routing support
     //-------------------------
+    get hasRouter() {
+        return this.cm && this.cm.routerModel;
+    }
+
     /**
      * Underlying Router5 Router object implementing the routing state.
      * Applications should use this property to directly access the Router5 API.
@@ -320,20 +326,9 @@ class XHClass {
     //--------------------------
     // Exception Support
     //--------------------------
-    /**
-     * Handle an exception.
-     *
-     * This method may be called by applications in order to provide logging, reporting,
-     * and display of exceptions.  It it typically called directly in catch() blocks.
-     *
-     * This method is an alias for ExceptionHandler.handleException(). See that method for more
-     * information about available options.
-     *
-     * See also Promise.catchDefault(). That method will delegate its arguments to this method
-     * and provides a more convenient interface for Promise-based code.
-     */
+
     handleException(exception, options) {
-        return this.cm.exceptionHandler.handleException(exception, options);
+        return this.cm.handleException(exception, options);
     }
 
     /**

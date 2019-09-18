@@ -13,6 +13,7 @@ import {XH} from '../core';
 import {AppState} from '../core/AppState';
 import {ExceptionHandler} from '../core/ExceptionHandler';
 import {RouterModel} from '../core/RouterModel';
+import {wait} from '../promise';
 import {throwIf} from '../utils/js';
 
 import {AboutDialogModel} from './AboutDialogModel';
@@ -51,30 +52,30 @@ export class AppContainerModel {
 
     //----------------------------------------------------------------------------------------------
     // Hoist Core Services
-    // Singleton instances of each service are created and installed within initAsync() below.
+    // Singleton instances of each service are created and installed on XH within initAsync() below.
     //----------------------------------------------------------------------------------------------
     /** @member {AutoRefreshService} */
-    autoRefreshService;
+    get autoRefreshService() {return XH.autoRefreshService}
     /** @member {ConfigService} */
-    configService;
+    get configService() {return XH.configService}
     /** @member {EnvironmentService} */
-    environmentService;
+    get environmentService() {return XH.environmentService}
     /** @member {FetchService} */
-    fetchService;
+    get fetchService() {return XH.fetchService}
     /** @member {GridExportService} */
-    gridExportService;
+    get gridExportService() {return XH.gridExportService}
     /** @member {IdentityService} */
-    identityService;
+    get identityService() {return XH.identityService}
     /** @member {IdleService} */
-    idleService;
+    get idleService() {return XH.idleService}
     /** @member {LocalStorageService} */
-    localStorageService;
+    get localStorageService() {return XH.localStorageService}
     /** @member {PrefService} */
-    prefService;
+    get prefService() {return XH.prefService}
     /** @member {TrackService} */
-    trackService;
+    get trackService() {return XH.trackService}
     /** @member {WebSocketService} */
-    webSocketService;
+    get webSocketService() {return XH.webSocketService}
 
     //------------
     // Sub-models
@@ -175,7 +176,7 @@ export class AppContainerModel {
                     `${XH.baseUrl}ping` :
                     `${window.location.origin}${XH.baseUrl}ping`;
 
-                throw this.exception({
+                throw XH.exception({
                     name: 'UI Server Unavailable',
                     message: `Client cannot reach UI server.  Please check UI server at the following location: ${pingURL}`,
                     detail: e.message
@@ -201,6 +202,25 @@ export class AppContainerModel {
             this.setAppState(S.LOAD_FAILED);
             this.handleException(e, {requireReload: true});
         }
+    }
+
+    //--------------------------
+    // Exception Support
+    //--------------------------
+    /**
+     * Handle an exception.
+     *
+     * This method may be called by applications in order to provide logging, reporting,
+     * and display of exceptions.  It it typically called directly in catch() blocks.
+     *
+     * This method is an alias for ExceptionHandler.handleException(). See that method for more
+     * information about available options.
+     *
+     * See also Promise.catchDefault(). That method will delegate its arguments to this method
+     * and provides a more convenient interface for Promise-based code.
+     */
+    handleException(exception, options) {
+        return this.exceptionHandler.handleException(exception, options);
     }
 
     //------------------------
@@ -283,11 +303,11 @@ export class AppContainerModel {
 
     startRouter() {
         this.routerModel.addRoutes(this.appModel.getRoutes());
-        this.router.start();
+        this.routerModel.router.start();
     }
 
     startOptionsDialog() {
-        this.acm.optionsDialogModel.setOptions(this.appModel.getAppOptions());
+        this.optionsDialogModel.setOptions(this.appModel.getAppOptions());
     }
 
     trackLoad() {
@@ -303,7 +323,7 @@ export class AppContainerModel {
                     case AppState.RUNNING:
                         XH.track({
                             category: 'App',
-                            msg: `Loaded ${this.clientAppName}`,
+                            msg: `Loaded ${XH.clientAppName}`,
                             elapsed: now - loadStarted - loginElapsed
                         });
                         disposer();

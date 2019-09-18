@@ -34,7 +34,7 @@ export class LoginPanelModel {
         }).thenAction(r => {
             this.warning = r.success ? '' : 'Login Incorrect';
             if (r.success) {
-                XH.completeInitAsync();
+                XH.acm.completeInitAsync();
             }
         }).catchDefault({
             hideParams: ['password']

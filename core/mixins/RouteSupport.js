@@ -28,7 +28,7 @@ export function RouteSupport({name, path, ...rest}) {
             ...rest
         };
 
-        if (XH.router.isStarted()) {
+        if (XH.hasRouter && XH.router.isStarted()) {
             XH.routerModel.addRoutes([route]);
         } else {
             RouteSupport._xhRoutes = RouteSupport._xhRoutes || [];
