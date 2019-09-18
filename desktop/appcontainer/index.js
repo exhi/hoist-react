@@ -5,4 +5,4 @@
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
 export * from './AppContainer';
-
+export * from './child/ChildContainer.js';

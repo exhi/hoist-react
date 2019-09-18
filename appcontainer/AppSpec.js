@@ -26,9 +26,9 @@ export class AppSpec {
      *      As with `clientAppCode` above, this will default to the global `appName` specified by
      *      the project's Webpack config, but can be set here to a more specific value (e.g.
      *      'MyApp Mobile').
-     * @param {Class} c.modelClass - root Model class for App, decorated with `@HoistAppModel`.
-     * @param {Class} c.componentClass - root Component class for App, decorated with `@HoistComponent`.
-     * @param {Class} c.containerClass - Container component to be used to host this application.
+     * @param {Class} c.model - root Model class for App, decorated with `@HoistAppModel`.
+     * @param {Class} c.component - root Component class for App, decorated with `@HoistComponent`.
+     * @param {Class} c.container - Container component to be used to host this application.
      *      This class is platform specific, and should be typically either
      *      `@xh/hoist/desktop/AppContainer` or `@xh/hoist/mobile/AppContainer`.
      * @param {boolean} c.isMobile - true if the app is designed to be run on mobile devices.
@@ -50,9 +50,9 @@ export class AppSpec {
     constructor({
         clientAppCode = XH.appCode,
         clientAppName = XH.appName,
-        modelClass,
-        componentClass,
-        containerClass,
+        model,
+        component,
+        container,
         isMobile,
         isSSO,
         checkAccess,
@@ -63,9 +63,9 @@ export class AppSpec {
         loginMessage = null,
         lockoutMessage = null
     }) {
-        throwIf(!modelClass, 'A Hoist App must define a modelClass.');
-        throwIf(!componentClass, 'A Hoist App must define a componentClass');
-        throwIf(!containerClass, 'A Hoist App must define a containerClass');
+        throwIf(!model, 'A Hoist App must define a model.');
+        throwIf(!component, 'A Hoist App must define a component');
+        throwIf(!container, 'A Hoist App must define a container');
         throwIf(isNil(isMobile), 'A Hoist App must define isMobile');
         throwIf(isNil(isSSO), 'A Hoist App must define isSSO');
 
@@ -79,9 +79,9 @@ export class AppSpec {
         this.clientAppCode = clientAppCode;
         this.clientAppName = clientAppName;
 
-        this.modelClass = modelClass;
-        this.componentClass = componentClass;
-        this.containerClass = containerClass;
+        this.model = model;
+        this.component = component;
+        this.container = container;
         this.isMobile = isMobile;
         this.isSSO = isSSO;
         this.checkAccess = checkAccess;

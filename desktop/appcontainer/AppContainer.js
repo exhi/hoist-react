@@ -54,14 +54,14 @@ export const AppContainer = hoistCmp({
     displayName: 'AppContainer',
     model: uses(AppContainerModel),
 
-    render() {
+    render({model}) {
 
-        useOnMount(() => XH.initAsync());
+        useOnMount(() => model.initAsync());
 
         return fragment(
             errorBoundary({
                 item: appContainerView(),
-                onError: (e) => XH.handleException(e, {requireReload: true})
+                onError: (e) => model.handleException(e, {requireReload: true})
             }),
             exceptionDialog()
         );
