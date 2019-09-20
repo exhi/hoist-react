@@ -16,23 +16,23 @@ export function RouteSupport({name, path, ...rest}) {
             }
         }
 
-        C.RouteName = name;
-
         if (!isEmpty(C.prototype._xhRouteParams)) {
             path += C.prototype._xhRouteParams.map(it => '?:' + it).join('');
         }
 
-        const route = {
+        const routeSpec = {
             name,
             path,
             ...rest
         };
 
+        C.xhRouteSpec = routeSpec;
+
         if (XH.hasRouter && XH.router.isStarted()) {
-            XH.routerModel.addRoutes([route]);
+            XH.routerModel.addRoutes([routeSpec]);
         } else {
             RouteSupport._xhRoutes = RouteSupport._xhRoutes || [];
-            RouteSupport._xhRoutes.push(route);
+            RouteSupport._xhRoutes.push(routeSpec);
         }
 
         return applyMixin(C, {
@@ -46,7 +46,7 @@ export function RouteSupport({name, path, ...rest}) {
                     track: () => paramNames.map(it => this[it]),
                     run: (values) => {
                         const {routerState} = XH;
-                        if (routerState.name.endsWith(name)) {
+                        if (routerState && routerState.name.endsWith(name)) {
                             const newParams = {};
                             paramNames.forEach((prop, idx) => newParams[prop] = values[idx]);
 
@@ -61,7 +61,7 @@ export function RouteSupport({name, path, ...rest}) {
                 this.addReaction({
                     track: () => XH.routerState,
                     run: (routerState) => {
-                        if (routerState.name.endsWith(name)) {
+                        if (routerState && routerState.name.endsWith(name)) {
                             console.debug('ROUTER STATE CHANGED FOR', name, toJS(routerState));
                             runInAction(() => {
                                 const {params} = routerState;

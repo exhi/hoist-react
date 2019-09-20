@@ -50,32 +50,10 @@ export class AppContainerModel {
     /** @member {AppSpec} */
     appSpec;
 
-    //----------------------------------------------------------------------------------------------
-    // Hoist Core Services
-    // Singleton instances of each service are created and installed on XH within initAsync() below.
-    //----------------------------------------------------------------------------------------------
-    /** @member {AutoRefreshService} */
-    get autoRefreshService() {return XH.autoRefreshService}
-    /** @member {ConfigService} */
-    get configService() {return XH.configService}
-    /** @member {EnvironmentService} */
-    get environmentService() {return XH.environmentService}
-    /** @member {FetchService} */
-    get fetchService() {return XH.fetchService}
-    /** @member {GridExportService} */
-    get gridExportService() {return XH.gridExportService}
-    /** @member {IdentityService} */
-    get identityService() {return XH.identityService}
-    /** @member {IdleService} */
-    get idleService() {return XH.idleService}
-    /** @member {LocalStorageService} */
-    get localStorageService() {return XH.localStorageService}
-    /** @member {PrefService} */
-    get prefService() {return XH.prefService}
-    /** @member {TrackService} */
-    get trackService() {return XH.trackService}
-    /** @member {WebSocketService} */
-    get webSocketService() {return XH.webSocketService}
+    //---------------------------
+    // Services
+    //---------------------------
+    installedServices = {};
 
     //------------
     // Sub-models
@@ -119,6 +97,15 @@ export class AppContainerModel {
 
     constructor(appSpec) {
         this.appSpec = appSpec;
+
+        this.addReaction({
+            track: () => this.themeModel.darkTheme,
+            run: (value) => {
+                const classList = document.body.classList;
+                classList.toggle('xh-dark', value);
+                classList.toggle('bp3-dark', value);
+            }
+        });
     }
 
     /**
@@ -149,7 +136,6 @@ export class AppContainerModel {
      * Not intended for application use.
      */
     async initAsync() {
-
         // Avoid multiple calls, which can occur if AppContainer remounted.
         if (this._initCalled) return;
         this._initCalled = true;
@@ -353,7 +339,7 @@ export class AppContainerModel {
     }
 
     async getAuthStatusFromServerAsync() {
-        return await this.fetchService
+        return await XH.fetchService
             .fetchJson({url: 'xh/authStatus'})
             .then(r => r.authenticated)
             .catch(e => {

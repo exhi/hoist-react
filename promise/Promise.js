@@ -39,6 +39,13 @@ export async function wait(interval) {
     return new Promise(resolve => setTimeout(resolve, interval));
 }
 
+export async function waitUntil(fn) {
+    if (fn()) return Promise.resolve();
+    return start(() => {
+        if (!fn()) return waitUntil(fn);
+    });
+}
+
 /**
  * Return a promise that resolves immediately.
  *

@@ -54,39 +54,69 @@ class XHClass {
     isDevelopmentMode = xhIsDevelopmentMode;
 
     //----------------------------------------------------------------------------------------------
+    // Hoist Core Services
+    // Singleton instances of each service are installed on XH by the AppContainer
+    //----------------------------------------------------------------------------------------------
+    /** @member {AutoRefreshService} */
+    autoRefreshService;
+    /** @member {ConfigService} */
+    configService;
+    /** @member {EnvironmentService} */
+    environmentService;
+    /** @member {FetchService} */
+    fetchService;
+    /** @member {GridExportService} */
+    gridExportService;
+    /** @member {IdentityService} */
+    identityService;
+    /** @member {IdleService} */
+    idleService;
+    /** @member {LocalStorageService} */
+    localStorageService;
+    /** @member {PrefService} */
+    prefService;
+    /** @member {TrackService} */
+    trackService;
+    /** @member {WebSocketService} */
+    webSocketService;
+
+    //----------------------------------------------------------------------------------------------
     // Aliased methods
     // Shortcuts to common core service methods and appSpec properties.
     //----------------------------------------------------------------------------------------------
-    track(opts)                 {return this.trackService.track(opts)}
-    fetch(opts)                 {return this.fetchService.fetch(opts)}
-    fetchJson(opts)             {return this.fetchService.fetchJson(opts)}
-    getConf(key, defaultVal)    {return this.configService.get(key, defaultVal)}
-    getPref(key, defaultVal)    {return this.prefService.get(key, defaultVal)}
-    setPref(key, val)           {return this.prefService.set(key, val)}
-    getEnv(key)                 {return this.environmentService.get(key)}
+    track(opts) {return this.trackService.track(opts)}
+    fetch(opts) {return this.fetchService.fetch(opts)}
+    fetchJson(opts) {return this.fetchService.fetchJson(opts)}
+    getConf(key, defaultVal) {return this.configService.get(key, defaultVal)}
+    getPref(key, defaultVal) {return this.prefService.get(key, defaultVal)}
+    setPref(key, val) {return this.prefService.set(key, val)}
+    getEnv(key) {return this.environmentService.get(key)}
 
-    getUser()                   {return this.identityService ? this.identityService.getUser() : null}
-    getUsername()               {return this.identityService ? this.identityService.getUsername() : null}
+    getUser() {return this.identityService ? this.identityService.getUser() : null}
+    getUsername() {return this.identityService ? this.identityService.getUsername() : null}
 
-    get appModel()              {return this.appContainerModel.appModel}
-    get appSpec()               {return this.appContainerModel.appSpec}
+    get appModel() {return this.appContainerModel.appModel}
+    get appSpec() {return this.appContainerModel.appSpec}
 
-    get isMobile()              {return this.appContainerModel.appSpec.isMobile}
-    get clientAppCode()         {return this.appContainerModel.appSpec.clientAppCode}
-    get clientAppName()         {return this.appContainerModel.appSpec.clientAppName}
+    get isMobile() {return this.appContainerModel.appSpec.isMobile}
+    get clientAppCode() {return this.appContainerModel.appSpec.clientAppCode}
+    get clientAppName() {return this.appContainerModel.appSpec.clientAppName}
 
     //---------------------------
     // Models
     //---------------------------
 
+    /** @member {AppContainerModel} */
     appContainerModel;
+
+    /** @member {AppContainerModel|ChildContainerModel} */
     containerModel;
 
     /**
      * Is Application running?
      * Observable shortcut for appState == AppState.RUNNING.
      */
-    get appIsRunning() {return this.appContainerModel.appState === AppState.RUNNING}
+    get appIsRunning() {return this.acm.appState === AppState.RUNNING}
 
     /**
      * Main entry point. Initialize and render application code.
@@ -99,15 +129,52 @@ class XHClass {
 
         this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);
 
+        // Add xh-app and platform classes to body element to power Hoist CSS selectors.
+        const platformCls = XH.isMobile ? 'xh-mobile' : 'xh-desktop';
+        document.body.classList.add('xh-app', platformCls);
+
         const rootView = elem(appSpec.container, {model: this.appContainerModel});
         ReactDOM.render(rootView, document.getElementById('xh-root'));
     }
 
+    openChildWindow(childSpec) {
+        const childWindow = window.open('about:blank', '_blank', 'width=300,height=300,menubar=no,status=no,titlebar=no,location=no,toolbar=no');
+
+        childSpec = childSpec instanceof ChildSpec ? childSpec : new ChildSpec(childSpec);
+        const containerModel = new ChildContainerModel(childSpec, this.appContainerModel, childWindow, true);
+
+        // Add xh-app and platform classes to body element to power Hoist CSS selectors.
+        const platformCls = XH.isMobile ? 'xh-mobile' : 'xh-desktop';
+        childWindow.document.body.classList.add('xh-app', platformCls);
+
+        childWindow.document.head.append(...Array.from(window.document.head.childNodes).map(it => it.cloneNode(true)));
+
+        const root = childWindow.document.createElement('div');
+        root.setAttribute('class', 'xh-root');
+        childWindow.document.body.appendChild(root);
+
+        const rootView = elem(childSpec.container, {model: containerModel});
+        ReactDOM.render(rootView, root);
+    }
+
     renderChild(childSpec) {
+        if (!window.opener) {
+            // TODO: Render something
+            console.error('Cannot render a child without a parent window');
+            return;
+        }
+
+        console.log('Waiting for XH to be available on the parent window ...', window.opener);
+        while (!window.opener.XH) {}
+
         childSpec = childSpec instanceof ChildSpec ? childSpec : new ChildSpec(childSpec);
 
         this.appContainerModel = window.opener.XH.appContainerModel;
-        this.containerModel = new ChildContainerModel(childSpec, this.appContainerModel);
+        this.containerModel = new ChildContainerModel(childSpec, this.appContainerModel, window);
+
+        // Add xh-app and platform classes to body element to power Hoist CSS selectors.
+        const platformCls = XH.isMobile ? 'xh-mobile' : 'xh-desktop';
+        document.body.classList.add('xh-app', platformCls);
 
         const rootView = elem(childSpec.container, {model: this.containerModel});
         ReactDOM.render(rootView, document.getElementById('xh-root'));
@@ -127,16 +194,30 @@ class XHClass {
      * collisions. If naming collisions are detected, an error will be thrown.
      */
     async installServicesAsync(...serviceClasses) {
-        const svcs = serviceClasses.map(serviceClass => new serviceClass());
-        await this.initServicesInternalAsync(svcs);
-        svcs.forEach(svc => {
+        // TODO: Do we want to do this?
+        throwIf(!(this.cm instanceof AppContainerModel), 'Services should only be installed by the main App window!');
+
+        const services = serviceClasses.map(serviceClass => new serviceClass());
+        await this.initServicesInternalAsync(services);
+        this.registerServices(services);
+    }
+
+    registerServices(services) {
+        services.forEach(svc => {
             const name = camelCase(svc.constructor.name);
             throwIf(this[name], (
                 `Service cannot be installed: property '${name}' already exists on XH object,
                 indicating duplicate/conflicting service names or an (unsupported) attempt to
                 install the same service twice.`
             ));
-            this[name] = svc;
+            this.cm.installedServices[name] = svc;
+
+            Object.defineProperty(this, name, {
+                get: () => svc,
+                set: () => {
+                    throw XH.exception(`Services are read-only. Use installServicesAsync to install new services.`);
+                }
+            });
         });
     }
 
@@ -402,7 +483,7 @@ class XHClass {
     //---------------------------------
 
     get acm() {return this.appContainerModel}
-    get cm()  {return this.containerModel}
+    get cm() {return this.containerModel}
 
     async initServicesInternalAsync(svcs) {
         const promises = svcs.map(it => {

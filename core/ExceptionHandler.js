@@ -57,9 +57,9 @@ export class ExceptionHandler {
         this.logException(exception, options);
 
         if (options.showAlert) {
-            XH.appContainerModel.exceptionDialogModel.show(exception, options);
+            XH.containerModel.exceptionDialogModel.show(exception, options);
         }
-        
+
         if (options.logOnServer) {
             this.logOnServerAsync({exception, userAlerted: options.showAlert});
         }
@@ -101,7 +101,7 @@ export class ExceptionHandler {
             console.error('Failed sending error to server:', e);
         }
     }
-    
+
     //--------------------------------
     // Implementation
     //--------------------------------

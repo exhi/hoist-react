@@ -66,7 +66,6 @@ export class RouterModel {
         return this.router.navigate(match[0], params);
     }
 
-
     //-------------------------
     // Implementation
     //-------------------------

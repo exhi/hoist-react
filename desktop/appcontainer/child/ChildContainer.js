@@ -6,7 +6,7 @@
  */
 
 import {frame, viewport} from '@xh/hoist/cmp/layout';
-import {AppState, elem, hoistCmp, uses, XH} from '@xh/hoist/core';
+import {elem, hoistCmp, uses} from '@xh/hoist/core';
 import {refreshContextView} from '@xh/hoist/core/refresh';
 import {StoreContextMenu} from '@xh/hoist/desktop/cmp/contextmenu';
 import {dockContainerImpl} from '@xh/hoist/desktop/cmp/dock/impl/DockContainer';
@@ -17,9 +17,9 @@ import {tabContainerImpl} from '@xh/hoist/desktop/cmp/tab/impl/TabContainer';
 import {installDesktopImpls} from '@xh/hoist/dynamics/desktop';
 import {useOnMount} from '@xh/hoist/utils/react';
 import {ChildContainerModel} from '../../../appcontainer/child/ChildContainerModel';
+import {ChildState} from '../../../appcontainer/child/ChildState';
 import {fragment, vframe} from '../../../cmp/layout';
 import {errorBoundary} from '../../../core/impl';
-import {aboutDialog} from '../AboutDialog';
 import {exceptionDialog} from '../ExceptionDialog';
 import {messageSource} from '../MessageSource';
 import {toastSource} from '../ToastSource';
@@ -37,15 +37,15 @@ export const ChildContainer = hoistCmp({
     displayName: 'ChildContainer',
     model: uses(ChildContainerModel),
 
-    render() {
+    render({model}) {
         useOnMount(() => {
-
+            model.initAsync();
         });
 
         return fragment(
             errorBoundary({
                 item: childContainerView(),
-                onError: (e) => XH.handleException(e, {requireReload: true})
+                onError: (e) => model.handleException(e, {requireReload: true})
             }),
 
             // TODO: Special handling for small windows
@@ -58,25 +58,21 @@ export const ChildContainer = hoistCmp({
 // Implementation
 //-----------------------------------------
 const childContainerView = hoistCmp.factory({
-    displayName: 'ChildAppContainerView',
+    displayName: 'ChildContainerView',
 
     render({model}) {
-        const S = AppState;
-        switch (XH.appState) {
-            case S.PRE_AUTH:
+        const S = ChildState,
+            state = model.childState;
+        switch (state) {
             case S.INITIALIZING:
-            case S.LOGIN_REQUIRED:
                 return viewport(mask({isDisplayed: true, spinner: true}));
-            case S.ACCESS_DENIED:
-            case S.LOAD_FAILED:
-                return viewport(mask({isDisplayed: true}));
             case S.RUNNING:
             case S.SUSPENDED:
                 return viewport(
                     vframe(
                         refreshContextView({
                             model: model.refreshContextModel,
-                            item: frame(elem(XH.appSpec.component, {model: XH.appModel}))
+                            item: frame(elem(model.childSpec.component, {model: model.childModel}))
                         }),
                         versionBar()
                     ),
@@ -84,7 +80,7 @@ const childContainerView = hoistCmp.factory({
                     toastSource(),
 
                     // TODO: Better component
-                    mask({isDisplayed: XH.appState === S.SUSPENDED})
+                    mask({isDisplayed: state === S.SUSPENDED})
                 );
             default:
                 return null;

@@ -5,33 +5,32 @@
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
 
-import {hoistCmp, elem, AppState, XH, uses} from '@xh/hoist/core';
-import {refreshContextView} from '@xh/hoist/core/refresh';
-import {errorBoundary} from '@xh/hoist/core/impl';
-import {mask} from '@xh/hoist/desktop/cmp/mask';
-import {fragment, frame, vframe, viewport} from '@xh/hoist/cmp/layout';
-
-import {aboutDialog} from './AboutDialog';
-import {feedbackDialog} from './FeedbackDialog';
-import {optionsDialog} from './OptionsDialog';
-import {exceptionDialog} from './ExceptionDialog';
-import {impersonationBar} from './ImpersonationBar';
-import {loginPanel} from './LoginPanel';
-import {updateBar} from './UpdateBar';
-import {versionBar}  from './VersionBar';
-import {lockoutPanel} from './LockoutPanel';
-import {messageSource} from './MessageSource';
-import {IdleDialog} from './IdleDialog';
-import {toastSource} from './ToastSource';
-
 import {AppContainerModel} from '@xh/hoist/appcontainer/AppContainerModel';
+import {fragment, frame, vframe, viewport} from '@xh/hoist/cmp/layout';
+import {AppState, elem, hoistCmp, uses, XH} from '@xh/hoist/core';
+import {errorBoundary} from '@xh/hoist/core/impl';
+import {refreshContextView} from '@xh/hoist/core/refresh';
+import {StoreContextMenu} from '@xh/hoist/desktop/cmp/contextmenu';
+import {dockContainerImpl} from '@xh/hoist/desktop/cmp/dock/impl/DockContainer';
+import {colChooserDialog as colChooser, ColChooserModel} from '@xh/hoist/desktop/cmp/grid';
+import {mask} from '@xh/hoist/desktop/cmp/mask';
 
 import {tabContainerImpl} from '@xh/hoist/desktop/cmp/tab/impl/TabContainer';
-import {dockContainerImpl} from '@xh/hoist/desktop/cmp/dock/impl/DockContainer';
-import {StoreContextMenu} from '@xh/hoist/desktop/cmp/contextmenu';
-import {colChooserDialog as colChooser, ColChooserModel} from '@xh/hoist/desktop/cmp/grid';
 import {installDesktopImpls} from '@xh/hoist/dynamics/desktop';
 import {useOnMount} from '@xh/hoist/utils/react';
+
+import {aboutDialog} from './AboutDialog';
+import {exceptionDialog} from './ExceptionDialog';
+import {feedbackDialog} from './FeedbackDialog';
+import {IdleDialog} from './IdleDialog';
+import {impersonationBar} from './ImpersonationBar';
+import {lockoutPanel} from './LockoutPanel';
+import {loginPanel} from './LoginPanel';
+import {messageSource} from './MessageSource';
+import {optionsDialog} from './OptionsDialog';
+import {toastSource} from './ToastSource';
+import {updateBar} from './UpdateBar';
+import {versionBar} from './VersionBar';
 
 installDesktopImpls({
     tabContainerImpl,
@@ -95,7 +94,7 @@ const appContainerView = hoistCmp.factory({
                         updateBar(),
                         refreshContextView({
                             model: model.refreshContextModel,
-                            item: frame(elem(XH.appSpec.component, {model: XH.appModel}))
+                            item: frame(elem(model.appSpec.component, {model: model.appModel}))
                         }),
                         versionBar()
                     ),
@@ -116,7 +115,7 @@ const appContainerView = hoistCmp.factory({
 const idleDialog = hoistCmp.factory({
     displayName: 'IdleDialog',
     render({model}) {
-        const dialogClass = XH.appSpec.idleDialogClass || IdleDialog;
+        const dialogClass = model.appSpec.idleDialogClass || IdleDialog;
 
         return model.appState === AppState.SUSPENDED && dialogClass ?
             elem(dialogClass, {onReactivate: () => XH.reloadApp()}) :
