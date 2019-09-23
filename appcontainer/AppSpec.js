@@ -61,7 +61,8 @@ export class AppSpec {
         idleDetectionEnabled = false,
         idleDialogClass = null,
         loginMessage = null,
-        lockoutMessage = null
+        lockoutMessage = null,
+        services
     }) {
         throwIf(!model, 'A Hoist App must define a model.');
         throwIf(!component, 'A Hoist App must define a component');
@@ -92,6 +93,9 @@ export class AppSpec {
         this.idleDialogClass = idleDialogClass;
         this.loginMessage = loginMessage;
         this.lockoutMessage = lockoutMessage;
+
+        this.services = services;
+
         Object.freeze(this);
     }
 }

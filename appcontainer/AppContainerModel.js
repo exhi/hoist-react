@@ -4,12 +4,11 @@
  *
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
-import {HoistModel, managed} from '@xh/hoist/core';
+import {HoistModel, managed, RouteSupport, XH} from '@xh/hoist/core';
 import {RootRefreshContextModel} from '@xh/hoist/core/refresh';
 import {observable, action} from '@xh/hoist/mobx';
 import {PendingTaskModel} from '@xh/hoist/utils/async';
-import {isBoolean, isString} from 'lodash';
-import {XH} from '../core';
+import {isBoolean, isString, isEmpty} from 'lodash';
 import {AppState} from '../core/AppState';
 import {ExceptionHandler} from '../core/ExceptionHandler';
 import {RouterModel} from '../core/RouterModel';
@@ -239,13 +238,19 @@ export class AppContainerModel {
 
             const access = this.checkAccess();
             if (!access.hasAccess) {
-                this.acm.showAccessDenied(access.message || 'Access denied.');
+                this.showAccessDenied(access.message || 'Access denied.');
                 this.setAppState(S.ACCESS_DENIED);
                 return;
             }
 
-            this.appModel = new this.appSpec.model();
-            await this.appModel.initAsync();
+            const {model: modelClass, services} = this.appSpec;
+            this.appModel = new modelClass();
+
+            if (!isEmpty(services)) {
+                await XH.installServicesAsync(...services);
+            }
+
+            if (this.appModel.initAsync) await this.appModel.initAsync();
             this.startRouter();
             this.startOptionsDialog();
             this.setAppState(S.RUNNING);
@@ -288,11 +293,12 @@ export class AppContainerModel {
     }
 
     startRouter() {
-        this.routerModel.addRoutes(this.appModel.getRoutes());
+        this.routerModel.addRoutes(RouteSupport.getRoutes());
         this.routerModel.router.start();
     }
 
     startOptionsDialog() {
+        if (!this.appModel.getAppOptions) return;
         this.optionsDialogModel.setOptions(this.appModel.getAppOptions());
     }
 

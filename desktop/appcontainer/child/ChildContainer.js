@@ -72,7 +72,7 @@ const childContainerView = hoistCmp.factory({
                     vframe(
                         refreshContextView({
                             model: model.refreshContextModel,
-                            item: frame(elem(model.childSpec.component, {model: model.childModel}))
+                            item: frame(elem(model.appSpec.component, {model: model.childModel}))
                         }),
                         versionBar()
                     ),

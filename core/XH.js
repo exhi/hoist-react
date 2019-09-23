@@ -18,6 +18,7 @@ import {AppSpec} from '../appcontainer/AppSpec';
 import {ChildContainerModel} from '../appcontainer/child/ChildContainerModel';
 import {ChildSpec} from '../appcontainer/child/ChildSpec';
 import '../styles/XH.scss';
+import {ChildContainer} from '../desktop/appcontainer';
 
 /**
  * Top-level Singleton model for Hoist. This is the main entry point for the API.
@@ -127,18 +128,47 @@ class XHClass {
     renderApp(appSpec) {
         appSpec = appSpec instanceof AppSpec ? appSpec : new AppSpec(appSpec);
 
-        this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);
+        const isChildWindow = !!window.opener;
+        let container = appSpec.container;
+        if (isChildWindow) {
+            throwIf(appSpec.isMobile, 'Child windows are not supported on mobile!');
+
+            // TODO: Make sure we were opened from the same app!
+
+            const startTime = new Date().getTime();
+            while (!window.opener.XH) {
+                if (new Date().getTime() - startTime >= 30000) {
+                    console.error('No XH available for Child window after 30 seconds');
+                    break;
+                }
+            }
+
+            console.debug(`Got parent XH reference after ${new Date().getTime() - startTime}ms`);
+
+            if (!window.opener.XH) {
+                this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);
+            } else {
+                this.appContainerModel = window.opener.XH.appContainerModel;
+                this.containerModel = new ChildContainerModel(appSpec, this.appContainerModel, window);
+                container = ChildContainer;
+
+                document.body.classList.add('xh-child');
+            }
+        } else {
+            this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);
+        }
 
         // Add xh-app and platform classes to body element to power Hoist CSS selectors.
         const platformCls = XH.isMobile ? 'xh-mobile' : 'xh-desktop';
         document.body.classList.add('xh-app', platformCls);
 
-        const rootView = elem(appSpec.container, {model: this.appContainerModel});
+        const rootView = elem(container, {model: this.containerModel});
         ReactDOM.render(rootView, document.getElementById('xh-root'));
     }
 
-    openChildWindow(childSpec) {
+    openSlaveWindow(childSpec) {
         const childWindow = window.open('about:blank', '_blank', 'width=300,height=300,menubar=no,status=no,titlebar=no,location=no,toolbar=no');
+        childWindow.xhIsSlaveWindow = true;
 
         childSpec = childSpec instanceof ChildSpec ? childSpec : new ChildSpec(childSpec);
         const containerModel = new ChildContainerModel(childSpec, this.appContainerModel, childWindow, true);
@@ -157,27 +187,14 @@ class XHClass {
         ReactDOM.render(rootView, root);
     }
 
-    renderChild(childSpec) {
-        if (!window.opener) {
-            // TODO: Render something
-            console.error('Cannot render a child without a parent window');
-            return;
-        }
+    openChildWindow(url) {
+        const childWindow = window.open(url, '_blank', 'width=300,height=300,menubar=no,status=no,titlebar=no,location=no,toolbar=no');
+        childWindow.xhIsChildWindow = true;
 
-        console.log('Waiting for XH to be available on the parent window ...', window.opener);
-        while (!window.opener.XH) {}
+        // TODO: Create some kind of ChildWindowModel to provide the caller with some controls for
+        //       controlling the child window? What else do we need to do?
 
-        childSpec = childSpec instanceof ChildSpec ? childSpec : new ChildSpec(childSpec);
-
-        this.appContainerModel = window.opener.XH.appContainerModel;
-        this.containerModel = new ChildContainerModel(childSpec, this.appContainerModel, window);
-
-        // Add xh-app and platform classes to body element to power Hoist CSS selectors.
-        const platformCls = XH.isMobile ? 'xh-mobile' : 'xh-desktop';
-        document.body.classList.add('xh-app', platformCls);
-
-        const rootView = elem(childSpec.container, {model: this.containerModel});
-        ReactDOM.render(rootView, document.getElementById('xh-root'));
+        return childWindow;
     }
 
     /**

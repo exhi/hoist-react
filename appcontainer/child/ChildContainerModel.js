@@ -30,8 +30,8 @@ export class ChildContainerModel {
 
     _initCalled = false;
 
-    /** @member {ChildSpec} */
-    childSpec;
+    /** @member {AppSpec} */
+    appSpec;
 
     /** @member {AppContainerModel} */
     appContainerModel;
@@ -68,10 +68,10 @@ export class ChildContainerModel {
     exceptionHandler = new ExceptionHandler();
 
     constructor(childSpec, appContainerModel, window, isSlave) {
-        this.childSpec = childSpec;
+        this.appSpec = childSpec;
         this.appContainerModel = appContainerModel;
         this.window = window;
-        this.isSlave = true;
+        this.isSlave = isSlave;
 
         if (isSlave) {
             this.themeModel = appContainerModel.themeModel;
@@ -110,7 +110,7 @@ export class ChildContainerModel {
         // Delay to workaround hot-reload styling issues in dev.
         await wait(XH.isDevelopmentMode ? 300 : 1);
 
-        this.childModel = new this.childSpec.model();
+        this.childModel = new this.appSpec.model();
 
         if (!this.isSlave) this.startRouter();
 
