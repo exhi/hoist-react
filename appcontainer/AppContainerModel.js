@@ -13,6 +13,7 @@ import {AppState} from '../core/AppState';
 import {ExceptionHandler} from '../core/ExceptionHandler';
 import {RouterModel} from '../core/RouterModel';
 import {wait} from '../promise';
+import {WindowService} from '../svc/WindowService';
 import {throwIf} from '../utils/js';
 
 import {AboutDialogModel} from './AboutDialogModel';
@@ -229,7 +230,7 @@ export class AppContainerModel {
             await XH.installServicesAsync(LocalStorageService);
             await XH.installServicesAsync(PrefService, ConfigService);
             await XH.installServicesAsync(
-                AutoRefreshService, IdleService, GridExportService, WebSocketService
+                AutoRefreshService, IdleService, GridExportService, WebSocketService, WindowService
             );
             this.initModels();
 

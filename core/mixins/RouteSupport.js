@@ -5,7 +5,6 @@ import {isEmpty, sortBy, isEqual} from 'lodash';
 
 export function RouteSupport({name, path, ...rest}) {
     return function(C) {
-        console.debug('ADDING ROUTE', name);
 
         if (isEmpty(path)) {
             path = '/';
@@ -25,6 +24,9 @@ export function RouteSupport({name, path, ...rest}) {
             path,
             ...rest
         };
+
+
+        console.debug('ADDING ROUTE', routeSpec);
 
         C.xhRouteSpec = routeSpec;
 

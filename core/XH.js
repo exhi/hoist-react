@@ -80,6 +80,8 @@ class XHClass {
     trackService;
     /** @member {WebSocketService} */
     webSocketService;
+    /** @member {WindowService} */
+    windowService;
 
     //----------------------------------------------------------------------------------------------
     // Aliased methods
@@ -102,6 +104,8 @@ class XHClass {
     get isMobile() {return this.appContainerModel.appSpec.isMobile}
     get clientAppCode() {return this.appContainerModel.appSpec.clientAppCode}
     get clientAppName() {return this.appContainerModel.appSpec.clientAppName}
+
+    createWindowAsync(params) {return this.windowService.createWindowAsync(params)}
 
     //---------------------------
     // Models
@@ -133,7 +137,7 @@ class XHClass {
         if (isChildWindow) {
             throwIf(appSpec.isMobile, 'Child windows are not supported on mobile!');
 
-            // TODO: Make sure we were opened from the same app!
+            // TODO: Make sure we were opened from the same app?
 
             const startTime = new Date().getTime();
             while (!window.opener.XH) {
@@ -185,16 +189,6 @@ class XHClass {
 
         const rootView = elem(childSpec.container, {model: containerModel});
         ReactDOM.render(rootView, root);
-    }
-
-    openChildWindow(url) {
-        const childWindow = window.open(url, '_blank', 'width=300,height=300,menubar=no,status=no,titlebar=no,location=no,toolbar=no');
-        childWindow.xhIsChildWindow = true;
-
-        // TODO: Create some kind of ChildWindowModel to provide the caller with some controls for
-        //       controlling the child window? What else do we need to do?
-
-        return childWindow;
     }
 
     /**

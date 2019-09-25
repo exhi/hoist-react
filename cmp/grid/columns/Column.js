@@ -219,7 +219,7 @@ export class Column {
                 enableCellChangeFlash: this.highlightOnChange,
                 headerValueGetter: ({location}) => {
                     return location === 'header' ?
-                        this.headerName:
+                        this.headerName :
                         this.chooserName;
                 }
             };
@@ -288,9 +288,15 @@ export class Column {
 
         const {renderer, elementRenderer} = this;
         if (renderer) {
-            ret.cellRenderer = (agParams) => {
+            const renderFn = (agParams) => {
                 return renderer(agParams.value, {record: agParams.data, column: this, gridModel, agParams});
             };
+
+            if (this.isTreeColumn) {
+                ret.cellRendererParams.innerRenderer = renderFn;
+            } else {
+                ret.cellRenderer = renderFn;
+            }
         } else if (elementRenderer) {
             ret.cellRendererFramework = class extends Component {
                 render() {
