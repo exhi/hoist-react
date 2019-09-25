@@ -39,13 +39,26 @@ class OpenFinWindowService {
             defaultHeight: size?.h,
             defaultLeft: position?.x,
             defaultTop: position?.y,
-            ...rest
+            ...rest,
+            autoShow: false
         });
+
+        console.log('OpenFinWindow Created', openFinWindow);
+        console.debug(openFinWindow.getWebWindow());
 
         openFinWindow.once('initialized', () => {
             console.debug('OpenFinWindow Initialized', openFinWindow);
             console.debug(openFinWindow.getWebWindow());
         });
+
+        openFinWindow.once('shown', () => {
+            console.debug('OpenFinWindow shown event!', openFinWindow);
+            console.debug(openFinWindow.getWebWindow());
+        });
+
+        await openFinWindow.show();
+        console.log('OpenFinWindow Shown');
+        console.debug(openFinWindow.getWebWindow());
 
         const wnd = openFinWindow.getWebWindow();
         wnd.onload = () => {

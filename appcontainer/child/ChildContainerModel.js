@@ -96,6 +96,7 @@ export class ChildContainerModel {
         if (this._initCalled) return;
         this._initCalled = true;
 
+        // TODO: whenAsync!
         await waitUntil(() => this.appContainerModel.appState === AppState.RUNNING);
 
         // Complete init

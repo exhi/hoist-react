@@ -140,6 +140,7 @@ class XHClass {
 
             // TODO: Make sure we were opened from the same app?
 
+            // TODO: Something less synchronous to wait for XH
             const startTime = new Date().getTime();
             while (!window.opener.XH) {
                 if (new Date().getTime() - startTime >= 30000) {
@@ -148,18 +149,17 @@ class XHClass {
                 }
             }
 
-            if (!window.opener.XH) {
-                this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);
-            } else {
+            if (window.opener.XH) {
                 this.appContainerModel = window.opener.XH.appContainerModel;
                 this.containerModel = new ChildContainerModel(appSpec, this.appContainerModel, window);
                 container = ChildContainer;
 
-                document.body.classList.add('xh-child');
-
+                // TODO: We could just add this to the main app window (keep track of main app window in appContainerModel)
                 window.opener.addEventListener('beforeunload', () => window.close());
             }
-        } else {
+        }
+
+        if (!this.appContainerModel) {
             this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);
         }
 
