@@ -7,6 +7,7 @@
 
 import {XH, HoistModel} from '@xh/hoist/core';
 import {observable, action} from '@xh/hoist/mobx';
+import {sync, SyncSupport} from '../openfin';
 
 /**
  *  Manage Theme.
@@ -14,9 +15,10 @@ import {observable, action} from '@xh/hoist/mobx';
  *  @private
  */
 @HoistModel
+@SyncSupport('xh-theme', 'auto')
 export class ThemeModel {
 
-    @observable darkTheme = false;
+    @observable @sync darkTheme = false;
 
     @action
     toggleTheme() {

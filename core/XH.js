@@ -106,6 +106,7 @@ class XHClass {
     get clientAppName() {return this.appContainerModel.appSpec.clientAppName}
 
     createWindowAsync(params) {return this.windowService.createWindowAsync(params)}
+    findWindowAsync(params) {return this.windowService.findWindowAsync(params)}
 
     //---------------------------
     // Models
@@ -147,8 +148,6 @@ class XHClass {
                 }
             }
 
-            console.debug(`Got parent XH reference after ${new Date().getTime() - startTime}ms`);
-
             if (!window.opener.XH) {
                 this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);
             } else {
@@ -157,6 +156,8 @@ class XHClass {
                 container = ChildContainer;
 
                 document.body.classList.add('xh-child');
+
+                window.opener.addEventListener('beforeunload', () => window.close());
             }
         } else {
             this.appContainerModel = this.containerModel = new AppContainerModel(appSpec);

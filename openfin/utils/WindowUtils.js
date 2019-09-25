@@ -1,4 +1,4 @@
-
+import {getApplication} from './ApplicationUtils';
 
 export function getWindow() {
     return window.fin.Window.getCurrentSync();
@@ -22,6 +22,11 @@ export function minimizeWindow() {
 
 export async function createWindowAsync(name, opts) {
     return window.fin.Window.create({name, ...opts});
+}
+
+export async function wrapWindowAsync(name) {
+    const {uuid} = getApplication().identity;
+    return window.fin.Window.wrap({uuid, name});
 }
 
 export async function updateOptionsAsync(opts) {

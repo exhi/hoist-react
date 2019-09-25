@@ -1,6 +1,6 @@
 import {resolve} from '@xh/hoist/promise';
 import {HoistService, XH} from '../core';
-import {createWindowAsync, isRunningInOpenFin} from '../openfin/utils';
+import {createWindowAsync, isRunningInOpenFin, wrapWindowAsync} from '../openfin/utils';
 
 @HoistService
 export class WindowService {
@@ -9,6 +9,10 @@ export class WindowService {
 
     async createWindowAsync(createParams) {
         return this.implSvc.createWindowAsync(createParams);
+    }
+
+    async findWindowAsync(name) {
+        return this.implSvc.findWindowAsync(name);
     }
 
     async initAsync() {
@@ -38,12 +42,26 @@ class OpenFinWindowService {
             ...rest
         });
 
+        openFinWindow.once('initialized', () => {
+            console.debug('OpenFinWindow Initialized', openFinWindow);
+            console.debug(openFinWindow.getWebWindow());
+        });
+
         const wnd = openFinWindow.getWebWindow();
         wnd.onload = () => {
             wnd.document.title = title;
         };
 
         return wnd;
+    }
+
+    async findWindowAsync(name) {
+        const openFinWindow = await wrapWindowAsync(name);
+        if (openFinWindow) {
+            return openFinWindow.getWebWindow();
+        }
+
+        return null;
     }
 
     async initAsync() {
@@ -70,6 +88,9 @@ class BrowserWindowService {
         };
 
         return resolve(wnd);
+    }
+
+    async findWindowAsync(name) {
     }
 
     async initAsync() {

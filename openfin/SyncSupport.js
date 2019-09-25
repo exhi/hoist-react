@@ -1,7 +1,7 @@
 import {forEach, isEmpty, isString} from 'lodash';
 import {runInAction} from '../mobx';
 import {applyMixin, throwIf} from '../utils/js';
-import {connectToChannelAsync, createChannelAsync, isRunningInOpenFin} from './utils';
+import {connectToChannelAsync, createChannelAsync, getWindow, isRunningInOpenFin} from './utils';
 
 export function SyncSupport(channel, isProvider) {
     return function(C) {
@@ -9,6 +9,12 @@ export function SyncSupport(channel, isProvider) {
             name: 'SyncSupport',
 
             init: function() {
+                if (!isRunningInOpenFin()) return;
+
+                if (isProvider == 'auto') {
+                    isProvider = getWindow().isMainWindow();
+                }
+
                 if (isProvider) {
                     this.initAsProviderAsync()
                         .then(() => this.onSyncReady());
@@ -27,7 +33,7 @@ export function SyncSupport(channel, isProvider) {
                     throwIf(!this._xhChannelProviderBus, 'Only Providers can add sync actions!');
                     if (isEmpty(action)) action = property;
                     this.addAutorun(() => {
-                        const value = valueFn ?  valueFn() : this[property];
+                        const value = valueFn ? valueFn() : this[property];
                         console.debug(`SyncSupport | Property ${property} Changed - Publishing Action ${action} - Value: ${value}`);
                         this._xhChannelProviderBus.publish(action, JSON.stringify({action, property, value}));
                     });
