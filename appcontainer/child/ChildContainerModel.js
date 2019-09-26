@@ -8,7 +8,7 @@ import {HoistModel, managed} from '@xh/hoist/core';
 import {RouteSupport} from '@xh/hoist/core/mixins';
 import {RootRefreshContextModel} from '@xh/hoist/core/refresh';
 import {action, observable} from '@xh/hoist/mobx';
-import {values} from 'lodash';
+import {values, isFunction} from 'lodash';
 import {XH} from '../../core';
 import {AppState} from '../../core/AppState';
 import {ExceptionHandler} from '../../core/ExceptionHandler';
@@ -116,7 +116,14 @@ export class ChildContainerModel {
         // Delay to workaround hot-reload styling issues in dev.
         await wait(XH.isDevelopmentMode ? 300 : 1);
 
-        this.childModel = new this.appSpec.model();
+        const {model} = this.appSpec;
+        if (isFunction(model)) {
+            this.childModel = new model();
+        } else if (model.isHoistModel) {
+            this.childModel = model;
+        } else {
+            throw XH.exception('Model must be a class/function or instance of a HoistModel!');
+        }
 
         if (!this.isSlave) this.startRouter();
 
