@@ -23,7 +23,6 @@ import {errorBoundary} from '../../../core/impl';
 import {exceptionDialog} from '../ExceptionDialog';
 import {messageSource} from '../MessageSource';
 import {toastSource} from '../ToastSource';
-import {versionBar} from '../VersionBar';
 
 installDesktopImpls({
     tabContainerImpl,
@@ -73,9 +72,9 @@ const childContainerView = hoistCmp.factory({
                         refreshContextView({
                             model: model.refreshContextModel,
                             item: frame(elem(model.appSpec.component, {model: model.childModel}))
-                        }),
-                        versionBar()
+                        })
                     ),
+                    mask({model: model.appLoadModel, spinner: true}),
                     messageSource(),
                     toastSource(),
 

@@ -5,17 +5,16 @@
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
 import {HoistModel, managed} from '@xh/hoist/core';
+import {RouteSupport} from '@xh/hoist/core/mixins';
 import {RootRefreshContextModel} from '@xh/hoist/core/refresh';
-import {values} from 'lodash';
 import {action, observable} from '@xh/hoist/mobx';
+import {values} from 'lodash';
 import {XH} from '../../core';
 import {AppState} from '../../core/AppState';
 import {ExceptionHandler} from '../../core/ExceptionHandler';
 import {RouterModel} from '../../core/RouterModel';
 import {wait, waitUntil} from '../../promise';
-import {RouteSupport} from '@xh/hoist/core/mixins';
-
-import {AboutDialogModel} from '../AboutDialogModel';
+import {PendingTaskModel} from '../../utils/async';
 import {ExceptionDialogModel} from '../ExceptionDialogModel';
 import {MessageSourceModel} from '../MessageSourceModel';
 import {ThemeModel} from '../ThemeModel';
@@ -49,7 +48,6 @@ export class ChildContainerModel {
     //------------
     // Sub-models
     //------------
-    @managed aboutDialogModel = new AboutDialogModel();
     @managed exceptionDialogModel = new ExceptionDialogModel();
     @managed messageSourceModel = new MessageSourceModel();
     @managed toastSourceModel = new ToastSourceModel();
@@ -67,8 +65,15 @@ export class ChildContainerModel {
     //---------------------------
     exceptionHandler = new ExceptionHandler();
 
-    constructor(childSpec, appContainerModel, window, isSlave) {
-        this.appSpec = childSpec;
+    /**
+     * Tracks globally loading promises.
+     * Link any async operations that should mask the entire application to this model.
+     */
+    @managed
+    appLoadModel = new PendingTaskModel({mode: 'all'});
+
+    constructor(appSpec, appContainerModel, window, isSlave) {
+        this.appSpec = appSpec;
         this.appContainerModel = appContainerModel;
         this.window = window;
         this.isSlave = isSlave;
@@ -152,7 +157,6 @@ export class ChildContainerModel {
 
     initModels() {
         const models = [
-            this.aboutDialogModel,
             this.exceptionDialogModel,
             this.messageSourceModel,
             this.toastSourceModel,

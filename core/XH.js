@@ -171,22 +171,28 @@ class XHClass {
         ReactDOM.render(rootView, document.getElementById('xh-root'));
     }
 
-    openSlaveWindow(childSpec) {
-        const childWindow = window.open('about:blank', '_blank', 'width=300,height=300,menubar=no,status=no,titlebar=no,location=no,toolbar=no');
-        childWindow.xhIsSlaveWindow = true;
+    async openChildWindowAsync(url) {
+        const wnd = await this.createWindowAsync({url});
+        wnd.xhIsChildWindow = true;
+        return wnd;
+    }
+
+    async openSlaveWindowAsync(childSpec) {
+        const wnd = await this.createWindowAsync({url: 'about:blank'});
+        wnd.xhIsSlaveWindow = true;
 
         childSpec = childSpec instanceof ChildSpec ? childSpec : new ChildSpec(childSpec);
-        const containerModel = new ChildContainerModel(childSpec, this.appContainerModel, childWindow, true);
+        const containerModel = new ChildContainerModel(childSpec, this.appContainerModel, wnd, true);
 
         // Add xh-app and platform classes to body element to power Hoist CSS selectors.
         const platformCls = XH.isMobile ? 'xh-mobile' : 'xh-desktop';
-        childWindow.document.body.classList.add('xh-app', platformCls);
+        wnd.document.body.classList.add('xh-app', platformCls);
 
-        childWindow.document.head.append(...Array.from(window.document.head.childNodes).map(it => it.cloneNode(true)));
+        wnd.document.head.append(...Array.from(window.document.head.childNodes).map(it => it.cloneNode(true)));
 
-        const root = childWindow.document.createElement('div');
+        const root = wnd.document.createElement('div');
         root.setAttribute('class', 'xh-root');
-        childWindow.document.body.appendChild(root);
+        wnd.document.body.appendChild(root);
 
         const rootView = elem(childSpec.container, {model: containerModel});
         ReactDOM.render(rootView, root);
@@ -264,14 +270,14 @@ class XHClass {
      * Apps should link any async operations that should mask the entire viewport to this model.
      */
     get appLoadModel() {
-        return this.acm.appLoadModel;
+        return this.cm.appLoadModel;
     }
 
     /**
      * The global RefreshContextModel for this application.
      */
     get refreshContextModel() {
-        return this.acm.refreshContextModel;
+        return this.cm.refreshContextModel;
     }
 
 
