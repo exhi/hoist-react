@@ -23,14 +23,16 @@ import {useOnUnmount} from '@xh/hoist/utils/react';
 export function useOwnedModelLinker(model) {
     const context = useContextModel('RefreshContextModel');
     useEffect(() => {
-        if (model && model.isLoadSupport) {
+        if (model?.isLoadSupport) {
             model.loadAsync();
             if (context) {
                 context.register(model);
-                return () => context.unregister(model);
+                return () => {
+                    context.unregister(model);
+                    XH.safeDestroy(model);
+                };
             }
         }
-    }, []);
-
-    useOnUnmount(() => XH.safeDestroy(model));
+        return () => XH.safeDestroy(model);
+    }, [model]);
 }

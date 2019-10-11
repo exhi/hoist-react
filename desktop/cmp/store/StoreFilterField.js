@@ -45,7 +45,22 @@ export const [StoreFilterField, storeFilterField] = hoistCmp.withFactory({
     displayName: 'StoreFilterField',
     className: 'xh-store-filter-field',
 
-    render({gridModel, store, ...props}) {
+    render({
+        gridModel,
+        store,
+        width = 180,
+        placeholder = 'Quick filter',
+        filterBuffer = 200,
+        filterOptions,
+        onFilterChange,
+        includeFields,
+        excludeFields,
+        model,
+        bind,
+        className,
+        style
+    }) {
+
         throwIf(gridModel && store, "Cannot specify both 'gridModel' and 'store' props.");
 
         if (!store) {
@@ -53,33 +68,26 @@ export const [StoreFilterField, storeFilterField] = hoistCmp.withFactory({
             store = gridModel ? gridModel.store : null;
         }
 
-        // Right now we freeze the initial props -- could be more dynamic.
-        // TODO: Build dependencies arg to useLocalModel?
         const impl = useLocalModel(
-            () => new LocalModel({
-                gridModel,
-                store,
-                filterBuffer: withDefault(props.filterBuffer, 200),
-                filterOptions: props.filterOptions,
-                onFilterChange: props.onFilterChange,
-                includeFields: props.includeFields,
-                excludeField: props.excludeFields,
-                model: props.model,
-                bind: props.bind
-            })
+            () => new LocalModel({gridModel, store, model, bind}),
+            [gridModel, store, model, bind]
         );
+        impl.configureFilter({
+            filterBuffer,
+            filterOptions,
+            onFilterChange,
+            includeFields,
+            excludeFields
+        });
 
         return textInput({
             value: impl.value,
-
             leftIcon: Icon.filter(),
             enableClear: true,
-
-            placeholder: withDefault(props.placeholder, 'Quick filter'),
-            className: props.className,
-            style: props.style,
-            width: withDefault(props.width, 180),
-
+            placeholder,
+            className,
+            style,
+            width,
             onChange: (v) => impl.setValue(v, {applyImmediately: false})
         });
     }
@@ -150,51 +158,41 @@ class LocalModel {
 
     gridModel;
     store;
-    filterBuffer;
-    filterOptions;
     onFilterChange;
-    includeFields;
-    excludeFields;
     model;
     bind;
+    @observable.struct filterBuffer;
+    @observable.struct filterOptions;
+    @observable.struct includeFields;
+    @observable.struct excludeFields;
 
-    @observable value = '';
+    @observable value;
 
     filter = null;
     applyFilterFn = null;
 
-    constructor({gridModel, store, filterBuffer, filterOptions, onFilterChange, includeFields, excludeFields, model, bind}) {
+    constructor({gridModel, store, model, bind}) {
         this.gridModel = gridModel;
         this.store = store;
-        this.filterBuffer = filterBuffer;
-        this.filterOptions = filterOptions;
-        this.onFilterChange = onFilterChange;
-        this.includeFields = includeFields;
-        this.excludeFields = excludeFields;
         this.model = model;
         this.bind = bind;
 
-        warnIf(includeFields && excludeFields,
-            "Cannot specify both 'includeFields' and 'excludeFields' props."
-        );
-        warnIf(!gridModel && !store && isEmpty(includeFields),
-            "Must specify one of 'gridModel', 'store', or 'includeFields' or the filter will be a no-op"
-        );
 
 
         if (store) {
-            this.applyFilterFn = debounce(
-                () => this.applyStoreFilter(),
-                filterBuffer
-            );
-
             if (gridModel) {
                 this.addReaction({
-                    track: () => [gridModel.columns, gridModel.groupBy, filterOptions],
+                    track: () => [gridModel.columns, gridModel.groupBy],
                     run: () => this.regenerateFilter({applyImmediately: false})
                 });
             }
         }
+        this.addReaction({
+            track: () => [this.filterBuffer, this.filterOptions, this.includeFields, this.excludeFields],
+            run: () =>  this.regenerateFilter({applyImmediately: false})
+        });
+
+        this.setValue('');
 
         if (model && bind) {
             this.addReaction({
@@ -203,6 +201,16 @@ class LocalModel {
                 fireImmediately: true
             });
         }
+    }
+
+    @action
+    configureFilter({filterBuffer, filterOptions, onFilterChange, includeFields, excludeFields}) {
+        this.applyFilterFn = debounce(this.applyStoreFilter, filterBuffer);
+
+        warnIf(includeFields && excludeFields, "Cannot specify both 'includeFields' and 'excludeFields' props.");
+        warnIf(!this.gridModel && !this.store && isEmpty(includeFields),
+            "Must specify one of 'gridModel', 'store', or 'includeFields' or the filter will be a no-op"
+        );
     }
 
     //------------------------
@@ -250,7 +258,7 @@ class LocalModel {
         }
     }
 
-    applyStoreFilter() {
+    applyStoreFilter = () => {
         if (this.store) {
             this.store.setFilter(this.filter);
         }

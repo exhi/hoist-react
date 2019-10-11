@@ -30,15 +30,41 @@ export function useContextModel(selector) {
 
 /**
  * Create a new model that will be maintained for lifetime of component and destroyed
- * when component is unmounted.
+ * when component is unmounted, or specified dependencies have changed.
  *
- * @param {(Class|function)} [spec] - class of HoistModel to create, or a function to call to generate one.
+ * @param {(Class|function)} spec - class of HoistModel to create, or a function to call to generate one.
+ * @param {Object[]} [dependencies] - array of values to be compared across renders.  If changed, the
+ *      model will be destroyed and re-created.  This argument has the same semantics as
+ *      the 'dependencies' argument in React.useEffect(), with the important exception that it
+ *      defaults to [] rather than null, so that LocalModel's will be preserved by default.
  */
-export function useLocalModel(spec) {
-    const [ret] = useState(() => {
-        if (!spec) return null;
-        return spec.isHoistModel ? new spec() : spec.call();
-    });
-    useOwnedModelLinker(ret);
-    return ret;
+export function useLocalModel(spec, dependencies = []) {
+    const [state] = useState({model: null, dependencies: null});
+    if (!state.model || !depsEqual(state.dependencies, dependencies)) {
+        if (!spec) {
+            state.model = null;
+        } else {
+            state.model = spec.isHoistModel ? new spec() : spec.call();
+        }
+        state.dependencies = dependencies;
+    }
+    useOwnedModelLinker(state.model);
+    return state.model;
+}
+
+
+//------------------------------
+// Implementation
+//------------------------------
+
+// Adapted From React useEffect(), 10/2019 source
+function depsEqual(prevDeps, nextDeps) {
+    if (!nextDeps || !prevDeps || nextDeps.length !== prevDeps.length) {
+        return false;
+    }
+    for (let i = 0; i < prevDeps.length; i++) {
+        if (Object.is(nextDeps[i], prevDeps[i])) continue;
+        return false;
+    }
+    return true;
 }
