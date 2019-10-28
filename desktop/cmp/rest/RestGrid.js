@@ -5,25 +5,29 @@
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
 
-import {cloneElement} from 'react';
+import {cloneElement, isValidElement} from 'react';
 import {hoistCmp, uses} from '@xh/hoist/core';
 import {grid} from '@xh/hoist/cmp/grid';
 import {panel} from '@xh/hoist/desktop/cmp/panel';
 import {fragment} from '@xh/hoist/cmp/layout';
-import {withDefault} from '@xh/hoist/utils/js';
-import {isReactElement} from '@xh/hoist/utils/react';
 import {restGridToolbar} from './impl/RestGridToolbar';
 import {restForm} from './impl/RestForm';
 import {RestGridModel} from './RestGridModel';
 import PT from 'prop-types';
-import {getLayoutProps} from '@xh/hoist/utils/react';
 
 export const [RestGrid, restGrid] = hoistCmp.withFactory({
     displayName: 'RestGrid',
     model: uses(RestGridModel),
     className: 'xh-rest-grid',
 
-    render({model, className, onRowDoubleClicked, ...props}) {
+    render({
+        model,
+        extraToolbarItems,
+        mask = true,
+        agOptions,
+        onRowDoubleClicked,
+        ...props
+    }) {
 
         if (!onRowDoubleClicked)  {
             onRowDoubleClicked = (row) => {
@@ -39,16 +43,10 @@ export const [RestGrid, restGrid] = hoistCmp.withFactory({
 
         return fragment(
             panel({
-                ...getLayoutProps(props),
-                className,
-                tbar: restGridToolbar({
-                    extraToolbarItems: props.extraToolbarItems
-                }),
-                item: grid({
-                    agOptions: props.agOptions,
-                    onRowDoubleClicked
-                }),
-                mask: getMaskFromProps(model, props)
+                ...props,
+                tbar: restGridToolbar({extraToolbarItems}),
+                item: grid({agOptions, onRowDoubleClicked}),
+                mask: getMaskFromProp(model, mask)
             }),
             restForm()
         );
@@ -85,10 +83,8 @@ RestGrid.propTypes = {
 };
 
 
-function getMaskFromProps(model, props) {
-    let mask = withDefault(props.mask, true);
-
-    if (isReactElement(mask)) {
+function getMaskFromProp(model, mask) {
+    if (isValidElement(mask)) {
         mask = cloneElement(mask, {model: model.loadModel});
     } else if (mask === true) {
         mask = model.loadModel;

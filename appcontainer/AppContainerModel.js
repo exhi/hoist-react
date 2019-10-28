@@ -20,7 +20,6 @@ import {AboutDialogModel} from './AboutDialogModel';
 import {ExceptionDialogModel} from './ExceptionDialogModel';
 import {OptionsDialogModel} from './OptionsDialogModel';
 import {FeedbackDialogModel} from './FeedbackDialogModel';
-import {LoginPanelModel} from './LoginPanelModel';
 import {ImpersonationBarModel} from './ImpersonationBarModel';
 import {MessageSourceModel} from './MessageSourceModel';
 import {ToastSourceModel} from './ToastSourceModel';
@@ -63,7 +62,6 @@ export class AppContainerModel {
     @managed optionsDialogModel = new OptionsDialogModel();
     @managed feedbackDialogModel = new FeedbackDialogModel();
     @managed impersonationBarModel = new ImpersonationBarModel();
-    @managed loginPanelModel = new LoginPanelModel();
     @managed messageSourceModel = new MessageSourceModel();
     @managed toastSourceModel = new ToastSourceModel();
     @managed themeModel = new ThemeModel();
@@ -281,7 +279,6 @@ export class AppContainerModel {
             this.optionsDialogModel,
             this.feedbackDialogModel,
             this.impersonationBarModel,
-            this.loginPanelModel,
             this.messageSourceModel,
             this.toastSourceModel,
             this.themeModel,

@@ -5,17 +5,16 @@
  * Copyright © 2019 Extremely Heavy Industries Inc.
  */
 
-import {Component} from 'react';
 import {XH} from '@xh/hoist/core';
-import {castArray, startCase, isFunction, clone, find} from 'lodash';
-import {ExportFormat} from './ExportFormat';
-import {withDefault, throwIf, warnIf} from '@xh/hoist/utils/js';
+import {throwIf, warnIf, withDefault} from '@xh/hoist/utils/js';
 import {Utils as agUtils} from 'ag-grid-community';
+import {castArray, clone, find, isFunction, startCase, isString} from 'lodash';
+import {Component} from 'react';
+import {ExportFormat} from './ExportFormat';
 
 /**
  * Cross-platform definition and API for a standardized Grid column.
  * Provided to GridModels as plain configuration objects.
- * @alias HoistColumn
  */
 export class Column {
 
@@ -27,10 +26,10 @@ export class Column {
      * @param {string} [c.field] - name of data store field to display within the column.
      * @param {string} [c.colId] - unique identifier for the Column within its grid.
      *      Defaults to field name - one of these two properties must be specified.
-     * @param {string} [c.headerName] - display text for grid header.
+     * @param {(Column~headerNameFn|string)} [c.headerName] - display text for grid header.
      * @param {string} [c.headerTooltip] - tooltip text for grid header.
-     * @param {(Column~headerClassFn|string|string[])} [c.headerClass] - additional css classes to add
-     *      to the column header. Supports both string values or function to generate strings.
+     * @param {(Column~headerClassFn|string|string[])} [c.headerClass] - CSS classes to add to the
+     *      header. Supports both string values or a function to generate strings.
      * @param {(Column~cellClassFn|string|string[])} [c.cellClass] - additional css classes to add
      *      to each cell in the column. Supports both string values or function to generate strings.
      * @param {boolean} [c.isTreeColumn] - true if this column should show the tree affordances for a
@@ -177,7 +176,7 @@ export class Column {
             'Specifying both renderIsComplex and highlightOnChange is not supported. Cells will be force-refreshed on all changes and always flash.'
         );
 
-        this.chooserName = chooserName || this.headerName || this.colId;
+        this.chooserName = withDefault(chooserName, isString(headerName) ? headerName : undefined, startCase(this.colId));
         this.chooserGroup = chooserGroup;
         this.chooserDescription = chooserDescription;
         this.excludeFromChooser = withDefault(excludeFromChooser, false);
@@ -198,12 +197,17 @@ export class Column {
      * Produce a Column definition appropriate for AG Grid.
      */
     getAgSpec() {
-        const {gridModel, field} = this,
+        const {gridModel, field, headerName} = this,
             me = this,
             ret = {
                 field,
                 colId: this.colId,
-                headerName: this.headerName,
+                headerValueGetter: (agParams) => {
+                    return agParams.location === 'header' ?
+                        isFunction(headerName) ? headerName({column: this, gridModel, agParams}) : headerName :
+                        this.chooserName;
+                },
+                headerClass: getAgHeaderClassFn(this),
                 headerTooltip: this.headerTooltip,
                 hide: this.hidden,
                 minWidth: this.minWidth,
@@ -216,13 +220,15 @@ export class Column {
                 lockVisible: !gridModel.colChooserModel,
                 headerComponentParams: {gridModel, xhColumn: this},
                 suppressToolPanel: this.excludeFromChooser,
-                enableCellChangeFlash: this.highlightOnChange,
-                headerValueGetter: ({location}) => {
-                    return location === 'header' ?
-                        this.headerName :
-                        this.chooserName;
-                }
+                enableCellChangeFlash: this.highlightOnChange
             };
+
+
+        // We will change these setters as needed to install the renderers in the proper location
+        // for cases like tree columns where we need to set the inner renderer on the default ag-Grid
+        // group cell renderer, instead of on the top-level column itself
+        let setRenderer = (r) => ret.cellRenderer = r,
+            setElementRenderer = (r) => ret.cellRendererFramework = r;
 
         // Our implementation of Grid.getDataPath() > Record.xhTreePath returns data path []s of
         // Record IDs. TreeColumns use those IDs as their cell values, regardless of field.
@@ -237,6 +243,12 @@ export class Column {
             };
             ret.valueGetter = (v) => v.data[field];
             ret.filterValueGetter = (v) => v.data[field];
+
+            setRenderer = (r) => ret.cellRendererParams.innerRenderer = r;
+            setElementRenderer = (r) => {
+                ret.cellRendererParams.innerRenderer = null;
+                ret.cellRendererParams.innerRendererFramework = r;
+            };
         }
 
         if (this.tooltip) {
@@ -246,23 +258,9 @@ export class Column {
                 ({value}) => value;
         }
 
-        // Generate CSS classes for headers and cells.
+        // Generate CSS classes for cells.
         // Default alignment classes are mixed in with any provided custom classes.
         const {align} = this;
-        ret.headerClass = (agParams) => {
-            let r = [];
-            if (this.headerClass) {
-                r = castArray(
-                    isFunction(this.headerClass) ?
-                        this.headerClass({column: this, gridModel, agParams}) :
-                        this.headerClass
-                );
-            }
-            if (align === 'center' || align === 'right') {
-                r.push('xh-column-header-align-' + align);
-            }
-            return r;
-        };
         ret.cellClass = (agParams) => {
             let r = [];
             if (this.cellClass) {
@@ -288,17 +286,11 @@ export class Column {
 
         const {renderer, elementRenderer} = this;
         if (renderer) {
-            const renderFn = (agParams) => {
+            setRenderer((agParams) => {
                 return renderer(agParams.value, {record: agParams.data, column: this, gridModel, agParams});
-            };
-
-            if (this.isTreeColumn) {
-                ret.cellRendererParams.innerRenderer = renderFn;
-            } else {
-                ret.cellRenderer = renderFn;
-            }
+            });
         } else if (elementRenderer) {
-            ret.cellRendererFramework = class extends Component {
+            setElementRenderer(class extends Component {
                 render() {
                     const agParams = this.props,
                         {value, data: record} = agParams;
@@ -306,7 +298,7 @@ export class Column {
                 }
 
                 refresh() {return false}
-            };
+            });
         }
 
         const sortCfg = find(gridModel.sortBy, {colId: ret.colId});
@@ -322,11 +314,13 @@ export class Column {
             // ...or process custom comparator with the Hoist-defined comparatorFn API.
             ret.comparator = (valueA, valueB, agNodeA, agNodeB) => {
                 const {gridModel, colId} = this,
+                    // Note: sortCfg and agNodes can be undefined if comparator called during show
+                    // of agGrid column header set filter menu.
                     sortCfg = find(gridModel.sortBy, {colId}),
-                    sortDir = sortCfg.sort,
-                    abs = sortCfg.abs,
-                    recordA = agNodeA.data,
-                    recordB = agNodeB.data,
+                    sortDir = sortCfg?.sort || 'asc',
+                    abs = sortCfg?.abs || false,
+                    recordA = agNodeA?.data,
+                    recordB = agNodeB?.data,
                     params = {
                         recordA,
                         recordB,
@@ -352,20 +346,43 @@ export class Column {
         const sortCfg = find(this.gridModel.sortBy, {colId: this.colId});
         return sortCfg ? sortCfg.comparator(v1, v2) : agUtils.defaultComparator(v1, v2);
     };
+}
 
+export function getAgHeaderClassFn(column) {
+    // Generate CSS classes for headers.
+    // Default alignment classes are mixed in with any provided custom classes.
+    const {headerClass, align, gridModel} = column;
+    return (agParams) => {
+        let r = [];
+        if (headerClass) {
+            r = castArray(
+                isFunction(headerClass) ?
+                    headerClass({column, gridModel, agParams}) :
+                    headerClass
+            );
+        }
+
+        if (align === 'center' || align === 'right') {
+            r.push('xh-column-header-align-' + align);
+        }
+
+        return r;
+    };
 }
 
 /**
- * @callback Column~comparatorFn - sort comparator function for a grid column.
+ * @callback Column~comparatorFn - sort comparator function for a grid column. Note that this
+ *      comparator will also be called if agGrid-provided column filtering is enabled: it is used
+ *      to sort values shown for set filter options. In that case, some extra params will be null.
  * @param {*} valueA - cell data valueA to be compared
  * @param {*} valueB - cell data valueB to be compared
  * @param {string} sortDir - either 'asc' or 'desc'
  * @param {boolean} abs - true to sort by absolute value
  * @param {Object} params - extra parameters devs might want
- * @param {Record} params.recordA - data Record for valueA
- * @param {Record} params.recordB - data Record for valueB
- * @param {Object} params.agNodeA - row node provided by ag-grid
- * @param {Object} params.agNodeB - row node provided by ag-grid
+ * @param {?Record} params.recordA - data Record for valueA
+ * @param {?Record} params.recordB - data Record for valueB
+ * @param {?Object} params.agNodeA - row node provided by ag-grid
+ * @param {?Object} params.agNodeB - row node provided by ag-grid
  * @param {Column} params.column - column for the cell being rendered
  * @param {GridModel} params.gridModel - gridModel for the grid
  * @param {function} params.defaultComparator - default comparator provided by Hoist for this column.
@@ -431,5 +448,20 @@ export class Column {
  * @typedef {Object} TooltipMetadata
  * @property {Record} record - row-level data Record.
  * @property {Column} column - column for the cell being rendered.
- * @property {TooltipParams} [agParams] - the ag-grid tooltip params.
+ * @property {ITooltipParams} [agParams] - the ag-grid tooltip params.
+ */
+
+/**
+ * @callback Column~headerNameFn - function to generate a Column header name.
+ *      Note that using function for the header name will ignore any ag-Grid functionality for
+ *      decorating the header name, the return value of the function will be used as-is.
+ *      The function should be treated like an autorun - any subsequent changes to observable
+ *      properties referenced during the previous execution of the function will trigger a re-render
+ *      of the column header.
+ * @param {Column} [column] - column for the header name being generated.
+ * @param {ColumnGroup} [columnGroup] - column group for the header name being generated.
+ * @param {GridModel} gridModel - gridModel for the grid.
+ * @param {Object} [agParams] - the ag-Grid header value getter params. Not present when called
+ *      during ColumnHeader rendering.
+ * @return {string} - the header name to render in the Column header
  */

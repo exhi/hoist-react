@@ -24,6 +24,7 @@ import {hoistCmp, XH, uses, HoistModel, useLocalModel} from '@xh/hoist/core';
 import {fragment, frame} from '@xh/hoist/cmp/layout';
 import {convertIconToSvg, Icon} from '@xh/hoist/icon';
 import {agGrid, AG_COMPACT_ROW_HEIGHTS, AG_ROW_HEIGHTS} from '@xh/hoist/cmp/ag-grid';
+import {ColumnGroupHeader} from './impl/ColumnGroupHeader';
 import {ColumnHeader} from './impl/ColumnHeader';
 import {GridModel} from './GridModel';
 import {withShortDebug} from '@xh/hoist/utils/js';
@@ -59,24 +60,25 @@ export const [Grid, grid] = hoistCmp.withFactory({
 
     render({model, className, ...props}) {
 
-        const implModel = useLocalModel(() => new GridImplModel(model, props)),
+        const impl = useLocalModel(() => new LocalModel(model, props)),
             platformColChooser = XH.isMobile ? mobileColChooser : desktopColChooser;
 
         // Don't render the agGridReact element with data or columns. Instead rely on API methods
         return fragment(
             frame({
-                className: classNames(className, implModel.isHierarchical ? 'xh-grid--hierarchical' : 'xh-grid--flat'),
+                className: classNames(className, impl.isHierarchical ? 'xh-grid--hierarchical' : 'xh-grid--flat'),
                 item: agGrid({
                     ...getLayoutProps(props),
-                    ...implModel.agOptions
+                    ...impl.agOptions
                 }),
-                onKeyDown: implModel.onKeyDown,
-                ref: implModel.viewRef
+                onKeyDown: impl.onKeyDown,
+                ref: impl.viewRef
             }),
             (model.colChooserModel ? platformColChooser({model: model.colChooserModel}) : null)
         );
     }
 });
+Grid.MULTIFIELD_ROW_HEIGHT = 38;
 
 Grid.propTypes = {
     /**
@@ -141,9 +143,7 @@ Grid.propTypes = {
 // Implementation
 //------------------------
 @HoistModel
-class GridImplModel {
-
-    static MULTIFIELD_ROW_HEIGHT = 38;
+class LocalModel {
 
     model;
     agOptions;
@@ -208,7 +208,7 @@ class GridImplModel {
                 ),
                 clipboardCopy: convertIconToSvg(Icon.copy())
             },
-            frameworkComponents: {agColumnHeader: ColumnHeader},
+            frameworkComponents: {agColumnHeader: ColumnHeader, agColumnGroupHeader: ColumnGroupHeader},
             rowSelection: model.selModel.mode,
             rowDeselection: true,
             getRowHeight: () => this.rowHeight,

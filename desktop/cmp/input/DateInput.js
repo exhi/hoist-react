@@ -60,6 +60,15 @@ export class DateInput extends HoistInput {
          */
         formatString: PT.string,
 
+        /**
+         * Month to display in calendar popover on first render.
+         *
+         * If unspecified, BP's component will default to the month of the current value (if present), or today
+         * (if within min/max), or to the mid-point between min/max. Note that falling through to
+         * that last case can result in an unexpectedly far-future default!
+         */
+        initialMonth: PT.oneOfType([PT.instanceOf(Date), PT.instanceOf(LocalDate)]),
+
         /** Icon to display inline on the left side of the input. */
         leftIcon: PT.element,
 
@@ -69,10 +78,22 @@ export class DateInput extends HoistInput {
          */
         rightElement: PT.element,
 
-        /** Maximum (inclusive) valid date. */
+        /**
+         * Maximum (inclusive) valid date. Controls which dates can be selected via the calendar
+         * picker. Will reset any out-of-bounds manually entered input to `null`.
+         *
+         * Note this is distinct in these ways from FormModel based validation, which will leave an
+         * invalid date entry in place but flag as invalid via FormField. For cases where it is
+         * possible to use FormField, that is often a better choice.
+         */
         maxDate: PT.oneOfType([PT.instanceOf(Date), PT.instanceOf(LocalDate)]),
 
-        /** Minimum (inclusive) valid date. */
+        /**
+         * Minimum (inclusive) valid date. Controls which dates can be selected via the calendar
+         * picker. Will reset any out-of-bounds manually entered input to `null`.
+         *
+         * See note re. validation on maxDate, above.
+         */
         minDate: PT.oneOfType([PT.instanceOf(Date), PT.instanceOf(LocalDate)]),
 
         /** Text to display when control is empty. */
@@ -92,6 +113,14 @@ export class DateInput extends HoistInput {
 
         /** True to show the picker upon focusing the input. */
         showPickerOnFocus: PT.bool,
+
+        /**
+         * True to parse any dates entered via the text input with moment's "strict" mode enabled.
+         * This ensures that the input entry matches the format specified by `formatString` exactly.
+         * If it does not, the input will be considered invalid and the value set to `null`.
+         * @see https://momentjs.com/guides/#/parsing/strict-mode/
+         */
+        strictInputParsing: PT.bool,
 
         /** Alignment of entry text within control, default 'left'. */
         textAlign: PT.oneOf(['left', 'right']),
@@ -129,8 +158,14 @@ export class DateInput extends HoistInput {
         return isLocalDate(minDate) ? minDate.date : minDate;
     }
 
-    get valueType() {return withDefault(this.props.valueType, 'date')}
-    get timePrecision() {return this.valueType === 'localDate' ? null : this.props.timePrecision}
+    get initialMonth() {
+        const {initialMonth} = this.props;
+        return isLocalDate(initialMonth) ? initialMonth.date : initialMonth;
+    }
+
+    get valueType()             {return withDefault(this.props.valueType, 'date')}
+    get strictInputParsing()    {return withDefault(this.props.strictInputParsing, false)}
+    get timePrecision()         {return this.valueType === 'localDate' ? null : this.props.timePrecision}
 
     render() {
         const props = this.getNonLayoutProps();
@@ -170,6 +205,7 @@ export class DateInput extends HoistInput {
                     onChange: this.onDatePickerChange,
                     maxDate: this.maxDate,
                     minDate: this.minDate,
+                    initialMonth: this.initialMonth,
                     showActionsBar: props.showActionsBar,
                     dayPickerProps: assign({fixedWeeks: true}, props.dayPickerProps),
                     timePrecision: this.timePrecision,
@@ -314,10 +350,15 @@ export class DateInput extends HoistInput {
 
     onDateChange = (date) => {
         if (date) {
+            // Dates outside of min/max constraints are reset to null.
             const {minDate, maxDate} = this;
-            if (minDate && date < minDate) date = minDate;
-            if (maxDate && date > maxDate) date = maxDate;
-            date = this.applyPrecision(date);
+            if (minDate && date < minDate) date = null;
+            if (maxDate && date > maxDate) date = null;
+            if (date) {
+                date = this.applyPrecision(date);
+            } else {
+                console.debug('DateInput value exceeded max/minDate bounds on change - reset to null.');
+            }
         }
         this.noteValueChange(date);
     };
@@ -354,9 +395,8 @@ export class DateInput extends HoistInput {
     }
 
     parseDate(dateString) {
-        // Handle 'invalid date'  as null.
-        const ret = moment(dateString, this.getFormat()).toDate();
-        return isNaN(ret) ? null : ret;
+        const parsedMoment = moment(dateString, this.getFormat(), this.strictInputParsing);
+        return parsedMoment.isValid() ? parsedMoment.toDate() : null;
     }
 
     consumeEvent(e) {
