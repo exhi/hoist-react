@@ -78,6 +78,9 @@ export class NumberInput extends HoistInput {
         /** Max decimal precision of the value, defaults to 4. */
         precision: PT.number,
 
+        /** True for precision to flow through to commited value. */
+        enforcePrecision: PT.bool,
+
         /** Element to display inline on the right side of the input. */
         rightElement: PT.element,
 
@@ -152,7 +155,12 @@ export class NumberInput extends HoistInput {
 
     toExternal(val) {
         val = this.parseValue(val);
-        return isNaN(val) ? null : val;
+
+        return isNaN(val) ?
+            null :
+            this.props.enforcePrecision ?
+                this.enforcePrecision(val) :
+                val;
     }
 
     onKeyDown = (ev) => {
@@ -164,11 +172,8 @@ export class NumberInput extends HoistInput {
         if (value == null) return '';
         if (this.hasFocus) return value;
 
-        const {props} = this,
-            {valueLabel, displayWithCommas} = props,
-            precision = withDefault(props.precision, 4),
-            zeroPad = withDefault(props.zeroPad, false),
-            formattedVal = fmtNumber(value, {precision, zeroPad, label: valueLabel, labelCls: null});
+        const {zeroPad, displayWithCommas} = this.props,
+            formattedVal = fmtNumber(value, {precision: this.precision, zeroPad: !!zeroPad});
 
         return displayWithCommas ? formattedVal : formattedVal.replace(/,/g, '');
     }
@@ -198,6 +203,10 @@ export class NumberInput extends HoistInput {
         return parseFloat(value);
     }
 
+    enforcePrecision(value) {
+        return fmtNumber(value, {formatConfig: {mantissa: this.precision, thousandSeparated: false}});
+    }
+
     onFocus = (ev) => {
         this.noteFocused();
 
@@ -206,6 +215,10 @@ export class NumberInput extends HoistInput {
             const target = ev.target;
             wait(1).then(() => target.select());
         }
+    }
+
+    get precision() {
+        return this.props.precision ?? 4;
     }
 }
 export const numberInput = elemFactory(NumberInput);
