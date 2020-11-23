@@ -8,7 +8,7 @@ import {div} from '@xh/hoist/cmp/layout';
 import {XH} from '@xh/hoist/core';
 import {genDisplayName} from '@xh/hoist/data';
 import {throwIf, warnIf, withDefault} from '@xh/hoist/utils/js';
-import {castArray, clone, find, get, isArray, isFinite, isFunction, isNil, isNumber, isEmpty, isString} from 'lodash';
+import {castArray, clone, find, get, isArray, isFinite, isFunction, isNil, isNumber, isString} from 'lodash';
 import {Component} from 'react';
 import {GridSorter} from '../impl/GridSorter';
 import {ExportFormat} from './ExportFormat';
@@ -314,7 +314,7 @@ export class Column {
      * Produce a Column definition appropriate for AG Grid.
      */
     getAgSpec() {
-        const {gridModel, field, headerName, displayName} = this,
+        const {gridModel, field, headerName, displayName, agOptions} = this,
             me = this,
             ret = {
                 field,
@@ -404,11 +404,12 @@ export class Column {
             tooltipSpec = tooltipElement ?? tooltip;
 
         if (tooltipSpec) {
-            ret.tooltipValueGetter = ({value}) => {
-                // Note that due to a known AgGrid issue, a tooltip must always return a value
-                // or risk not showing when the value later changes.
-                // See https://github.com/xh/hoist-react/issues/2058
-                return isEmpty(value) ? '*EMPTY*' : value;
+            ret.tooltipValueGetter = (obj) => {
+
+                // We actually return the *record* itself, rather then ag-Grid's default escaped value.
+                // We need it below, where it will be handled to class as a prop.
+                // Note that we must always return a value - see hoist-react #2058, #2181
+                return obj.data ?? '*EMPTY*';
             };
             ret.tooltipComponentFramework = class extends Component {
                 getReactContainerClasses() {
@@ -417,20 +418,20 @@ export class Column {
                 }
                 render() {
                     const agParams = this.props,
-                        {location, api, rowIndex} = agParams;
+                        {location, value: record} = agParams;  // Value actually contains store record -- see above
 
                     if (location === 'header') return div(me.headerTooltip);
 
-                    // ag-Grid cmp gets escaped value, lookup raw value from record instead
-                    const record = api.getDisplayedRowAtIndex(rowIndex)?.data;
-                    if (!record) return null;
-
+                    if (!record?.isRecord) return null;
                     const {store} = record,
-                        value = me.getValueFn({record, column: me, gridModel, agParams, store});
+                        val = me.getValueFn({record, column: me, gridModel, agParams, store});
 
-                    return isFunction(tooltipSpec) ?
-                        tooltipSpec(value, {record, column: me, gridModel, agParams}) :
-                        value;
+                    const ret = isFunction(tooltipSpec) ?
+                        tooltipSpec(val, {record, column: me, gridModel, agParams}) :
+                        val;
+
+                    // Always defend against returning undefined from render() - React will throw!
+                    return ret ?? null;
                 }
             };
         }
@@ -479,10 +480,12 @@ export class Column {
 
                 refresh() {return false}
             });
-        } else {
+        } else if (!agOptions.cellRenderer && !agOptions.cellRendererFramework) {
             // By always providing a minimal cell pass-through cellRenderer, we can ensure the
             // cell contents are wrapped in a span by Ag-Grid. Our flexbox enabled cell styling
-            // requires all cells to have an inner element to work properly.
+            // requires all cells to have an inner element to work properly. We check agOptions
+            // in case the dev has specified either renderer option directly against the ag-Grid
+            // API (done sometimes with components for performance reasons).
             setRenderer((agParams) => agParams.value?.toString());
         }
 
@@ -521,7 +524,7 @@ export class Column {
         }
 
         // Finally, apply explicit app requests.  The customer is always right....
-        return {...ret, ...this.agOptions};
+        return {...ret, ...agOptions};
     }
 
     //--------------------

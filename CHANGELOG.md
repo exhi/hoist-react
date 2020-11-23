@@ -6,9 +6,16 @@
 
 * New props added to `TabSwitcher`:
   * `enableOverflow` shows tabs that would normally overflow their container in a drop down menu.
-  * `tabWidth`, `tabMinWidth` & `tabMaxWidth` allow flexible configuration of tab sizes within the switcher.
+  * `tabWidth`, `tabMinWidth` & `tabMaxWidth` allow flexible configuration of tab sizes within the
+    switcher.
 * `TabModel` now supports a bindable `tooltip`, which can be used to render strings or elements
   while hovering over tabs.
+* New `Placeholder` component provides a thin wrapper around `Box` with standardized, muted styling.
+* New `StoreFilterField.matchMode` prop allows customizing match to `start`, `startWord`, or `any`.
+* `Select` now implements enhanced typeahead filtering of options. The default filtering is now
+  based on a case-insensitive match of word starts in the label. (Previously it was based on a match
+  _anywhere_ in the label _or_ value.) To customize this behavior, applications should use the new
+  `filterFn` prop.
 
 ### 💥 Breaking Changes
 
@@ -17,13 +24,32 @@
   * Use `switcher: true` to retain default behavior.
   * Use `switcher: false` to not include a TabSwitcher. (previously `switcherPosition: 'none'`)
   * Use `switcher: {...}` to provide customisation props for the `TabSwitcher`. See `TabSwitcher`
-  documentation for more information.
+    documentation for more information.
+
+### 🐞 Bug Fixes
+
+* Fix issue where grid row striping inadvertently disabled by default for non-tree grids.
+
+### ⚙️ Technical
+
+* `Cube.info` is now directly observable.
+
+### 📚 Libraries
+
+* @blueprintjs/core `3.35 -> 3.36`
+* @blueprintjs/datetime `3.19 -> 3.20`
+* clipboard-copy `3.1 -> 3.2`
+* core-js `3.6 -> 3.7`
+
+[Commit Log](https://github.com/xh/hoist-react/compare/v36.6.1...develop)
+
+## v36.6.1 - 2020-11-06
 
 ### 🐞 Bug Fixes
 
 * Fix issue where grid row striping would be turned off by default for non-tree grids
 
-[Commit Log](https://github.com/xh/hoist-react/compare/v36.6.0...develop)
+[Commit Log](https://github.com/xh/hoist-react/compare/v36.6.0...v36.6.1)
 
 ## v36.6.0 - 2020-10-28
 
@@ -35,7 +61,8 @@
     `treeStyle: 'none'` on any `GridModel` instances where you do _not_ want the new default style.
 * New `DashContainerModel.extraMenuItems` config supports custom app menu items in Dashboards
 * An "About" item has been added to the default app menu.
-* The default `TabSwitcher` now supports scrolling, and will show overflowing tabs in a drop down menu.
+* The default `TabSwitcher` now supports scrolling, and will show overflowing tabs in a drop down
+  menu.
 
 ### 🐞 Bug Fixes
 
@@ -2141,10 +2168,9 @@ leverage the context for model support discussed above.
 * ag-Grid has been updated to v20.0.0. Most apps shouldn't require any changes - however, if you are
   using `agOptions` to set sorting, filtering or resizing properties, these may need to change:
 
-  For the `Grid`, `agOptions.enableColResize`, `agOptions.enableSorting` and
-  `agOptions.enableFilter` have been removed. You can replicate their effects by using
-  `agOptions.defaultColDef`. For `Columns`, `suppressFilter` has been removed, an should be replaced
-  with `filter: false`.
+  For the `Grid`, `agOptions.enableColResize`, `agOptions.enableSorting` and `agOptions.enableFilter`
+  have been removed. You can replicate their effects by using `agOptions.defaultColDef`. For
+  `Columns`, `suppressFilter` has been removed, an should be replaced with `filter: false`.
 
 * `HoistAppModel.requestRefresh` and `TabContainerModel.requestRefresh` have been removed.
   Applications should use the new Refresh architecture described above instead.
@@ -2955,9 +2981,9 @@ and ag-Grid upgrade, and more. 🚀
   * `Panel` and `Resizable` components have moved to their own packages in
     `@xh/hoist/desktop/cmp/panel` and `@xh/hoist/desktop/cmp/resizable`.
 * **Multiple changes and improvements made to tab-related APIs and components.**
-  * The `TabContainerModel` constructor API has changed, notably `children` -> `tabs`, `useRoutes`
-    -> `route` (to specify a starting route as a string) and `switcherPosition` has moved from a
-    model config to a prop on the `TabContainer` component.
+  * The `TabContainerModel` constructor API has changed, notably `children` -> `tabs`, `useRoutes` ->
+    `route` (to specify a starting route as a string) and `switcherPosition` has moved from a model
+    config to a prop on the `TabContainer` component.
   * `TabPane` and `TabPaneModel` have been renamed `Tab` and `TabModel`, respectively, with several
     related renames.
 * **Application entry-point classes decorated with `@HoistApp` must implement the new getter method
