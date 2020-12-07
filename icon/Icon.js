@@ -242,6 +242,7 @@ export const Icon = {
     toast(p)            {return Icon.icon({...p,  iconName: 'bread-slice'})},
     toolbox(p)          {return Icon.icon({...p,  iconName: 'toolbox'})},
     tools(p)            {return Icon.icon({...p,  iconName: 'tools'})},
+    trash(p)            {return Icon.icon({...p,  iconName: 'trash-alt'})},
     transaction(p)      {return Icon.icon({...p,  iconName: 'exchange'})},
     treeList(p)         {return Icon.icon({...p,  iconName: 'stream'})},
     undo(p)             {return Icon.icon({...p,  iconName: 'undo'})},
@@ -301,7 +302,7 @@ export const Icon = {
  * @return {string} - html of the <svg> tag representing the icon.
  */
 export function convertIconToHtml(iconElem) {
-    throwIf(iconElem.type?.displayName !== 'Icon',
+    throwIf(!iconElem.type?.isHoistComponent,
         'Icon not created by a Hoist Icon factory - cannot convert to SVG'
     );
     return iconHtml(iconElem.props);
@@ -315,7 +316,7 @@ export function convertIconToHtml(iconElem) {
  * @returns {Object} - json representation of icon.
  */
 export function serializeIcon(iconElem) {
-    throwIf(iconElem.type?.displayName !== 'Icon',
+    throwIf(!iconElem.type?.isHoistComponent,
         'Attempted to serialize an icon not created by a Hoist Icon factory.'
     );
 

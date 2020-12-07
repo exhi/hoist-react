@@ -4,5 +4,6 @@
  *
  * Copyright © 2020 Extremely Heavy Industries Inc.
  */
-export * from './HoistInputModel';
-export * from './HoistInputProps';
+
+export * from './GroupingChooser';
+export * from '@xh/hoist/cmp/grouping/GroupingChooserModel';
