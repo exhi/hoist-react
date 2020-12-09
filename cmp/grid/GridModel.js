@@ -1175,7 +1175,7 @@ export class GridModel {
 }
 
 const hoistRowClassRules = {
-    'xh-top-level-tree-row': (node) => node.level === 0,
+    'xh-top-level-tree-row': ({node}) => node.level === 0,
     'xh-single-child': ({node}) => node.firstChild && node.lastChild
 };
 
