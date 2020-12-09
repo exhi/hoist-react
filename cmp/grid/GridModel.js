@@ -42,6 +42,7 @@ import {
     last,
     map,
     max,
+    merge,
     min,
     pull,
     sortBy
@@ -204,6 +205,12 @@ export class GridModel {
      *      install default context menu items.
      * @param {ExportOptions} [c.exportOptions] - default export options.
      * @param {RowClassFn} [c.rowClassFn] - closure to generate CSS class names for a row.
+     *      Note: Old classes are not removed, classes will accumulate. If you need to remove
+     *      old classes use rowClassRules.
+     * @param {Object} [c.rowClassRules] - Config object of the same form as ag-grid config
+     *      of the same name. Generally: a JS object in which the keys are class names and
+     *      the values are functions. If the Fn returns true, the class gets applied.
+     *      If it returns false the class will be removed if previously applied.
      * @param {number} [c.groupRowHeight] - Height (in px) of a group row. Note that this will
      *      override `sizingMode` for group rows.
      * @param {Grid~groupRowRendererFn} [c.groupRowRenderer] - function returning a string used to
@@ -267,6 +274,7 @@ export class GridModel {
         enableExport = false,
         exportOptions = {},
         rowClassFn = null,
+        rowClassRules = null,
 
         groupRowHeight,
         groupRowRenderer,
@@ -288,6 +296,7 @@ export class GridModel {
 
         this.emptyText = emptyText;
         this.rowClassFn = rowClassFn;
+        this.rowClassRules = this.enhanceRowClassRules(rowClassRules);
         this.groupRowHeight = groupRowHeight;
         this.groupRowRenderer = groupRowRenderer;
         this.groupRowElementRenderer = groupRowElementRenderer;
@@ -985,6 +994,10 @@ export class GridModel {
         }
     }
 
+    enhanceRowClassRules(rowClassRules) {
+        return merge(hoistRowClassRules, rowClassRules);
+    }
+
     // Store fields and column configs have a tricky bi-directional relationship in GridModel,
     // both for historical reasons and developer convenience.
     //
@@ -1161,6 +1174,11 @@ export class GridModel {
     };
 }
 
+const hoistRowClassRules = {
+    'xh-top-level-tree-row': (node) => node.level === 0,
+    'xh-single-child': ({node}) => node.firstChild && node.lastChild
+};
+
 //--------------------------------------------------------------------
 // Hidden flex column designed to workaround the following ag issue:
 //
@@ -1231,6 +1249,7 @@ const xhEmptyFlexCol = {
 /**
  * @callback RowClassFn - closure to generate CSS class names for a row.
  * @param {Object} data - the inner data object from the Record associated with the rendered row.
+ * @param {Object} agParams - the ag grid params object passed by their getRowClass callback.
  * @returns {(String|String[])} - CSS class(es) to apply to the row level.
  */
 

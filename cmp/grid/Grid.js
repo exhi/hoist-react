@@ -16,6 +16,7 @@ import {isDisplayed, withShortDebug, apiRemoved} from '@xh/hoist/utils/js';
 import {filterConsecutiveMenuSeparators} from '@xh/hoist/utils/impl';
 import {getLayoutProps} from '@xh/hoist/utils/react';
 import {getTreeStyleClasses} from '@xh/hoist/cmp/grid';
+import {warnIf} from '@xh/hoist/utils/js';
 
 import classNames from 'classnames';
 import {
@@ -188,6 +189,12 @@ class LocalModel {
         this.addReaction(this.dataReaction());
         this.addReaction(this.groupReaction());
 
+        warnIf(
+            props.agOptions?.rowClassRules,
+            'rowClassRules should be provided as a property of GridModel. ' +
+            'Providing this config as part of agOptions may break grid styles.'
+        );
+
         this.agOptions = merge(this.createDefaultAgOptions(props), props.agOptions || {});
         this.propsKeyDown = props.onKeyDown;
     }
@@ -222,6 +229,7 @@ class LocalModel {
             rowSelection: model.selModel.mode,
             getRowHeight: (params) => params.node?.group ? this.groupRowHeight : this.rowHeight,
             getRowClass: ({data}) => model.rowClassFn ? model.rowClassFn(data) : null,
+            rowClassRules: model.rowClassRules,
             noRowsOverlayComponentFramework: observer(() => div(model.emptyText)),
             onRowClicked: (e) => {
                 this.onRowClicked(e);

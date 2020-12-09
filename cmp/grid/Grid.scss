@@ -168,17 +168,26 @@
   //------------------------
   &.xh-grid--tree-style-highlights {
     div[class*=" ag-row-group"],
-    div[class^="ag-row-group"] {
+    div[class^="ag-row-group"],
+    .xh-top-level-tree-row {
       &:not(.ag-row-selected),
+      // The following definition is an override for styles applied in AgGrid.scss that break our tree highlight scheme
       &.ag-row.ag-row-odd:not(.ag-full-width-row):not(.ag-row-selected) {
         background-color: var(--xh-grid-tree-group-bg);
+      }
+    }
+
+    .xh-ag-grid--stripe-rows {
+      .ag-row.ag-row-odd.xh-single-child:not(.ag-full-width-row):not(.ag-row-selected):not([class*=" ag-row-group"]):not([class^="ag-row-group"]) {
+        background-color: unset;
       }
     }
   }
 
   &.xh-grid--tree-style-borders {
     .ag-row-level-0[class*=" ag-row-group"],
-    .ag-row-level-0[class^="ag-row-group"], {
+    .ag-row-level-0[class^="ag-row-group"],
+    .xh-top-level-tree-row {
       &:not(.ag-row-first) {
         border-top: 1px solid var(--xh-grid-tree-group-border-color);
       }
