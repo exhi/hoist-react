@@ -177,12 +177,23 @@
       }
     }
 
-    .xh-ag-grid--stripe-rows {
-      .ag-row.ag-row-odd.xh-single-child:not(.ag-full-width-row):not(.ag-row-selected):not([class*=" ag-row-group"]):not([class^="ag-row-group"]) {
-        background-color: unset;
+  //  .xh-ag-grid--stripe-rows {
+  //    .ag-row.ag-row-odd.xh-single-child:not(.ag-full-width-row):not(.ag-row-selected):not([class*=" ag-row-group"]):not([class^="ag-row-group"]) {
+  //      background-color: unset;
+  //    }
+  //  }
+  //}
+
+    // TODO: This is probably not right yet, but I can see we're not getting the desired classes in the DOM with RowClassRules on update.
+      .xh-ag-grid--stripe-rows {
+        .ag-row.xh-odd-child-index-row:not(.ag-full-width-row):not(.ag-row-selected):not([class*=" ag-row-group"]):not([class^="ag-row-group"]) {
+          background-color: var(--xh-grid-bg);
+        }
+        .ag-row:not(.ag-full-width-row):not(.ag-row-selected):not([class*=" ag-row-group"]):not([class^="ag-row-group"]) {
+          background-color: var(--xh-grid-bg-odd);
+        }
       }
     }
-  }
 
   &.xh-grid--tree-style-borders {
     .ag-row-level-0[class*=" ag-row-group"],

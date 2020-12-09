@@ -1176,7 +1176,16 @@ export class GridModel {
 
 const hoistRowClassRules = {
     'xh-top-level-tree-row': ({node}) => node.level === 0,
-    'xh-single-child': ({node}) => node.firstChild && node.lastChild
+    'xh-odd-child-index-row': ({node, data}) => {
+        // TODO: Not re-running when a sibling is added via "updateData" method
+        if (data.data.name?.startsWith('Real Estate')) {
+            console.log(node.childIndex);
+            console.log(node.childIndex % 2);
+        }
+        return node.childIndex % 2;
+    },
+    'xh-even-child-index-row': ({node}) => !(node.childIndex % 2)
+    // 'xh-single-child': ({node}) => node.firstChild && node.lastChild
 };
 
 //--------------------------------------------------------------------
