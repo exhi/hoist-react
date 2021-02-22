@@ -7,7 +7,7 @@
 import {HoistModel} from '@xh/hoist/core';
 import {action, bindable, computed, observable, makeObservable} from '@xh/hoist/mobx';
 import {throwIf, withDefault} from '@xh/hoist/utils/js';
-import {cloneDeep, get, isEmpty, isFinite, partition, set, sumBy, unset, sortBy} from 'lodash';
+import {cloneDeep, get, isEmpty, isFinite, partition, set, sumBy, unset, sortBy, map, find} from 'lodash';
 
 /**
  * Core Model for a TreeMap.
@@ -178,14 +178,13 @@ export class TreeMapModel extends HoistModel {
 
     @computed
     get heatFieldLabel() {
-        const field = this.store.fields.find(it => it.name === this.heatField);
+        const field = find(this.store.fields, {name: this.heatField});
         return field ? field.displayName : this.heatField;
     }
 
     @computed
     get selectedIds() {
-        const {gridModel} = this;
-        return gridModel ? gridModel.selection.map(it => it.id) : [];
+        return map(this.gridModel?.selection, 'id');
     }
 
     @computed

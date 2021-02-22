@@ -8,6 +8,7 @@ import {HoistModel, managed, RefreshMode, RenderMode, XH} from '@xh/hoist/core';
 import {action, observable, makeObservable} from '@xh/hoist/mobx';
 import {ensureUniqueBy, throwIf} from '@xh/hoist/utils/js';
 import {DockViewModel} from './DockViewModel';
+import {find, without} from 'lodash';
 
 /**
  * Model for a DockContainer, representing its contents.
@@ -61,7 +62,7 @@ export class DockContainerModel extends HoistModel {
     }
 
     getView(id) {
-        return this.views.find(it => it.id === id);
+        return find(this.views, {id});
     }
 
     /**
@@ -78,7 +79,7 @@ export class DockContainerModel extends HoistModel {
     removeView(id) {
         const view = this.getView(id);
         if (view) XH.safeDestroy(view);
-        this.views = this.views.filter(it => it.id !== id);
+        this.views = without(this.views, {id});
     }
 
     expandView(id) {

@@ -6,7 +6,7 @@
  */
 import {XH} from '@xh/hoist/core';
 import {UrlStore} from '@xh/hoist/data';
-import {filter, pickBy} from 'lodash';
+import {filter, pickBy, map} from 'lodash';
 import {RestField} from './RestField';
 
 /**
@@ -55,7 +55,7 @@ export class RestStore extends UrlStore {
 
     async bulkDeleteRecordsAsync(records) {
         const {url} = this,
-            ids = records.map(it => it.id),
+            ids = map(records, 'id'),
             resp = await XH.fetchJson({
                 url: `${url}/bulkDelete`,
                 params: {ids}

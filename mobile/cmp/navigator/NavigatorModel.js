@@ -7,7 +7,7 @@
 import {HoistModel, RefreshMode, RenderMode, XH} from '@xh/hoist/core';
 import {action, bindable, observable, makeObservable} from '@xh/hoist/mobx';
 import {ensureNotEmpty, ensureUniqueBy, throwIf, warnIf} from '@xh/hoist/utils/js';
-import {find, isEqual, keys, merge} from 'lodash';
+import {find, isEqual, keys, merge, map} from 'lodash';
 import {page} from './impl/Page';
 import {PageModel} from './PageModel';
 
@@ -133,8 +133,8 @@ export class NavigatorModel extends HoistModel {
             // we drop the rest of the route and redirect to the route so far
             if (init && pageModelCfg.disableDirectLink) {
                 const completedRouteParts = routeParts.slice(0, i),
-                    newRouteName = completedRouteParts.map(it => it.id).join('.'),
-                    newRouteParams = merge({}, ...completedRouteParts.map(it => it.props));
+                    newRouteName = map(completedRouteParts, 'id').join('.'),
+                    newRouteParams = merge({}, ...map(completedRouteParts, 'props'));
 
                 XH.navigate(newRouteName, newRouteParams, {replace: true});
                 return;

@@ -320,7 +320,7 @@ export class DashContainerModel extends HoistModel {
     }
 
     getViewSpec(id) {
-        return this.viewSpecs.find(it => it.id === id);
+        return find(this.viewSpecs, {id});
     }
 
     //-----------------

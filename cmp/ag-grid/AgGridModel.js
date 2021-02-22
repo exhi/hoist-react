@@ -18,7 +18,8 @@ import {
     partition,
     set,
     startCase,
-    isEqual
+    isEqual,
+    map
 } from 'lodash';
 
 /**
@@ -469,7 +470,7 @@ export class AgGridModel extends HoistModel {
     getSelectedRowNodeIds() {
         this.throwIfNotReady();
 
-        return this.agApi.getSelectedRows().map(it => it.id);
+        return map(this.agApi.getSelectedRows(), 'id');
     }
 
     /**

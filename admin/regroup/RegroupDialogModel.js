@@ -4,7 +4,7 @@
  *
  * Copyright © 2021 Extremely Heavy Industries Inc.
  */
-import {uniq} from 'lodash';
+import {uniq, map} from 'lodash';
 import {HoistModel, XH} from '@xh/hoist/core';
 import {action, bindable, observable, makeObservable} from '@xh/hoist/mobx';
 import {Icon} from '@xh/hoist/icon/Icon';
@@ -36,7 +36,7 @@ export class RegroupDialogModel extends HoistModel {
     async saveAsync() {
         const {_parent, groupName} = this,
             {selection, store} = _parent.gridModel,
-            ids = selection.map(it => it.id),
+            ids = map(selection, 'id'),
             resp = await store.bulkUpdateRecordsAsync(ids, {groupName}),
             failuresPresent = resp.fail > 0,
             intent = failuresPresent ? 'warning' : 'success';
