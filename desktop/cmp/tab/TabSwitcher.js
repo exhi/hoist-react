@@ -183,8 +183,8 @@ const overflowMenu = hoistCmp.factory({
 
         return popover({
             popoverClassName: 'xh-tab-switcher__overflow-popover',
-            position: 'bottom-right',
-            target: button({
+            placement: 'bottom-end',
+            item: button({
                 icon: vertical ? Icon.ellipsisHorizontal() : Icon.ellipsisVertical()
             }),
             minimal: true,
@@ -284,7 +284,7 @@ class LocalModel extends HoistModel  {
 
     get tabEls() {
         if (!this.el) return [];
-        return Array.from(this.el.querySelectorAll('.bp3-tab'));
+        return Array.from(this.el.querySelectorAll('.bp4-tab'));
     }
 
     getTabDimensions(tab) {

@@ -105,11 +105,11 @@ DateInput.propTypes = {
      * @see https://blueprintjs.com/docs/#datetime/dateinput
      */
     popoverPosition: PT.oneOf([
-        'top-left', 'top', 'top-right',
-        'right-top', 'right', 'right-bottom',
-        'bottom-right', 'bottom', 'bottom-left',
-        'left-bottom', 'left', 'left-top',
-        'auto'
+        'top', 'top-start', 'top-end',
+        'bottom', 'bottom-start', 'bottom-end',
+        'right', 'right-start', 'right-end',
+        'left', 'left-start', 'left-end',
+        'auto', 'auto-start', 'auto-end'
     ]),
 
     /** Boundary for calendar popover, as per Blueprint docs. Defaults to viewport. */
@@ -365,7 +365,7 @@ const cmp = hoistCmp.factory(
                     className: classNames('xh-date-input__picker-icon', enablePicker ? null : 'xh-date-input__picker-icon--disabled'),
                     icon: Icon.calendar(),
                     tabIndex: enableTextInput || disabled ? -1 : undefined,
-                    elementRef: model.buttonRef,
+                    ref: model.buttonRef,
                     onClick: enablePicker && !disabled ? model.onOpenPopoverClick : null
                 })
             ]
@@ -395,7 +395,7 @@ const cmp = hoistCmp.factory(
                 usePortal: true,
                 autoFocus: false,
                 enforceFocus: false,
-                position: props.popoverPosition ?? 'auto',
+                placement: props.popoverPosition ?? 'auto',
                 boundary: props.popoverBoundary ?? 'viewport',
                 popoverRef: (v) => {model.popoverRef.current = v},  // Workaround for #2272
                 onClose: model.onPopoverClose,
