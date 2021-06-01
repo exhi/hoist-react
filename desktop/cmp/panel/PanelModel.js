@@ -54,7 +54,7 @@ export class PanelModel extends HoistModel {
     /** Is the Panel rendering in a collapsed state? */
     @observable collapsed = false;
 
-    /** Size in pixels along sizing dimension.  Used when object is *not* collapsed. */
+    /** Size in pixels or percents along sizing dimension.  Used when object is *not* collapsed. */
     @observable size = null;
 
     /** Is this panel currently resizing? */
@@ -74,8 +74,8 @@ export class PanelModel extends HoistModel {
      * @param {boolean} [c.resizable] - Can panel be resized?
      * @param {boolean} [c.resizeWhileDragging] - Redraw panel as resize happens?
      * @param {boolean} [c.collapsible] - Can panel be collapsed, showing only its header?
-     * @param {number} c.defaultSize - Default size (in px) of the panel.
-     * @param {number} [c.minSize] - Minimum size (in px) to which the panel can be resized.
+     * @param {(number|string)} config.defaultSize - Default size (in px or %) of the panel.  eg: 300 or '50%'
+     * @param {?number} [c.minSize] - Minimum size (in px) to which the panel can be resized.
      * @param {?number} [c.maxSize] - Maximum size (in px) to which the panel can be resized.
      * @param {boolean} [c.defaultCollapsed] - Default collapsed state.
      * @param {string} c.side - Side towards which the panel collapses or shrinks. This relates
@@ -120,16 +120,11 @@ export class PanelModel extends HoistModel {
 
         apiRemoved(rest.prefName, 'prefName', 'Specify "persistWith" instead.');
 
-        if (!isNil(maxSize) && (maxSize < minSize || maxSize < defaultSize)) {
-            console.error("'maxSize' must be greater than 'minSize' and 'defaultSize'. No 'maxSize' will be set.");
-            maxSize = null;
-        }
-
         this.collapsible = collapsible;
         this.resizable = resizable;
         this.resizeWhileDragging = resizeWhileDragging;
         this.defaultSize = defaultSize;
-        this.minSize = Math.min(minSize, defaultSize);
+        this.minSize = minSize,
         this.maxSize = maxSize;
         this.defaultCollapsed = defaultCollapsed;
         this.side = side;

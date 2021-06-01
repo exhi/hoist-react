@@ -52,7 +52,8 @@ export class DraggerModel extends HoistModel {
     onDragStart = (e) => {
         const dragger = e.target;
         this.panelEl = dragger.parentElement;
-        const {panelEl: panel, panelModel} = this;
+        const {panelEl: panel, panelModel} = this,
+            {resizeWhileDragging, maxSize, vertical} = panelModel;
 
         throwIf(
             !panel.nextElementSibling && !panel.previousElementSibling,
@@ -63,11 +64,11 @@ export class DraggerModel extends HoistModel {
 
         const {clientX, clientY} = this.parseEventPositions(e);
         this.resizeState = {startX: clientX, startY: clientY};
-        this.startSize = panelModel.size;
+        this.startSize = panel[vertical ? 'offsetHeight' : 'offsetWidth'];
         this.panelParent = panel.parentElement;
         panelModel.setIsResizing(true);
 
-        if (!panelModel.resizeWhileDragging) {
+        if (!resizeWhileDragging) {
             this.dragBar = this.getDraggableSplitter(dragger);
             this.panelParent.appendChild(this.dragBar);
             this.diff = 0;
@@ -75,7 +76,7 @@ export class DraggerModel extends HoistModel {
 
         // We will use whichever is smaller - the calculated available size, or the configured max size
         const calcMaxSize = this.startSize + this.getSiblingAvailSize();
-        this.maxSize = panelModel.maxSize ? Math.min(panelModel.maxSize, calcMaxSize) : calcMaxSize;
+        this.maxSize = maxSize ? Math.min(maxSize, calcMaxSize) : calcMaxSize;
     };
 
     onDrag = (e) => {

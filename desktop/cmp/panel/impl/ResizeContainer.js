@@ -7,6 +7,7 @@
 import {box, hbox, vbox} from '@xh/hoist/cmp/layout';
 import {hoistCmp, useContextModel} from '@xh/hoist/core';
 import {Children} from 'react';
+import {isString} from 'lodash';
 import {PanelModel} from '../PanelModel';
 import {dragger} from './dragger/Dragger';
 import {splitter} from './Splitter';
@@ -17,11 +18,15 @@ export const resizeContainer = hoistCmp.factory({
     className: 'xh-resizable',
 
     render({className, children}, ref) {
-        const panelModel = useContextModel(PanelModel);
-        let {size, resizable, collapsed, vertical, contentFirst, showSplitter} = panelModel,
+        const panelModel = useContextModel(PanelModel),
+            {size, resizable, collapsed, vertical, contentFirst, showSplitter} = panelModel,
             dim = vertical ? 'height' : 'width',
             child = Children.only(children),
-            items = [collapsed ? box(child) : box({item: child, [dim]: size})];
+            dragBarWidth = showSplitter ? '8px' : '0px',
+            sizeIsPct = isString(size) && size.endsWith('%');
+
+        const boxSize = sizeIsPct ? `calc(100% - ${dragBarWidth})` : size;
+        let items = [collapsed ? box(child) : box({item: child, [dim]: boxSize})];
 
         if (showSplitter) {
             const splitterCmp = splitter();
@@ -33,13 +38,17 @@ export const resizeContainer = hoistCmp.factory({
         }
 
         const cmp = vertical ? vbox : hbox,
-            maxDim = vertical ? 'maxHeight' : 'maxWidth';
+            maxDim = vertical ? 'maxHeight' : 'maxWidth',
+            minDim = vertical ? 'minHeight' : 'minWidth',
+            cmpSize = !collapsed && sizeIsPct ? size : undefined;
 
         return cmp({
             ref,
             className,
             flex: 'none',
+            [dim]: cmpSize,
             [maxDim]: '100%',
+            [minDim]: dragBarWidth,
             items
         });
     }

@@ -20,6 +20,8 @@
   pointer to a Component's backing `HoistModel`.
 * `fmtNumber()` supports new flags `withCommas` and `omitFourDigitComma` to customize the treatment of
 commas in number displays.
+* `PanelModel` now supports a `size` property specified in percentage as well as pixels
+  (e.g. `size: '20%'` as well as `size: 200`).
 
 
 ### 💥 Breaking Changes
