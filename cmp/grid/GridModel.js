@@ -9,6 +9,7 @@ import {Column, ColumnGroup, GridAutosizeMode, TreeStyle} from '@xh/hoist/cmp/gr
 import {br, fragment} from '@xh/hoist/cmp/layout';
 import {HoistModel, managed, XH} from '@xh/hoist/core';
 import {FieldType, Store, StoreSelectionModel} from '@xh/hoist/data';
+import {GridFilterModel} from '@xh/hoist/cmp/grid/filter/GridFilterModel';
 import {ColChooserModel as DesktopColChooserModel} from '@xh/hoist/dynamics/desktop';
 import {ColChooserModel as MobileColChooserModel} from '@xh/hoist/dynamics/mobile';
 import {Icon} from '@xh/hoist/icon';
@@ -84,6 +85,8 @@ export class GridModel extends HoistModel {
     treeMode;
     /** @member {ColChooserModel} */
     colChooserModel;
+    /** @member {GridFilterModel} */
+    filterModel;
     /** @member {function} */
     rowClassFn;
     /** @member {(Array|function)} */
@@ -148,6 +151,8 @@ export class GridModel extends HoistModel {
         'exportExcel',
         'exportCsv',
         '-',
+        'gridFilter',
+        '-',
         'restoreDefaults',
         '-',
         'colChooser',
@@ -181,6 +186,8 @@ export class GridModel extends HoistModel {
      *      `store.SummaryRecord` to be populated. Valid values are true/'top', 'bottom', or false.
      * @param {(StoreSelectionModel|Object|String)} [c.selModel] - StoreSelectionModel, or a
      *      config or string `mode` with which to create one.
+     * @param {(GridFilterModelConfig|boolean)} [c.filterModel] - config with which to create a
+     *      GridFilterModel, or boolean `true` to enable default. Desktop only.
      * @param {(ColChooserModelConfig|boolean)} [c.colChooserModel] - config with which to create a
      *      ColChooserModel, or boolean `true` to enable default.
      * @param {?ReactNode} [c.restoreDefaultsWarning] - Confirmation warning to be presented to
@@ -263,6 +270,7 @@ export class GridModel extends HoistModel {
         treeMode = false,
         showSummary = false,
         selModel,
+        filterModel,
         colChooserModel,
         emptyText = null,
         hideEmptyTextBeforeLoad = true,
@@ -372,6 +380,7 @@ export class GridModel extends HoistModel {
 
         this.colChooserModel = this.parseChooserModel(colChooserModel);
         this.selModel = this.parseSelModel(selModel);
+        this.filterModel = this.parseFilterModel(filterModel);
         this.persistenceModel = persistWith ? new GridPersistenceModel(this, persistWith) : null;
         this.experimental = this.parseExperimental(experimental);
         this.onKeyDown = onKeyDown;
@@ -407,6 +416,7 @@ export class GridModel extends HoistModel {
         this.setSortBy(sortBy);
         this.setGroupBy(groupBy);
 
+        this.filterModel?.clear();
         this.persistenceModel?.clear();
         return true;
     }
@@ -708,11 +718,10 @@ export class GridModel extends HoistModel {
         this.store.clear();
     }
 
-    /** Filter the underlying store.*/
+    /** Filter the underlying store. */
     setFilter(filter) {
         this.store.setFilter(filter);
     }
-
 
     /** @param {Object[]} colConfigs - {@link Column} or {@link ColumnGroup} configs. */
     @action
@@ -1267,6 +1276,23 @@ export class GridModel extends HoistModel {
         return this.markManaged(new StoreSelectionModel({mode, store: this.store}));
     }
 
+    parseFilterModel(filterModel) {
+        if (XH.isMobileApp) return null;
+
+        if (isPlainObject(filterModel)) {
+            const config = defaults(filterModel, {gridModel: this});
+            return this.markManaged(new GridFilterModel(config));
+        }
+
+        if (filterModel) {
+            const {store} = this,
+                config = {gridModel: this, valueSource: store, target: store};
+            return this.markManaged(new GridFilterModel(config));
+        }
+
+        return null;
+    }
+
     parseExperimental(experimental) {
         apiRemoved(experimental?.suppressUpdateExpandStateOnDataLoad, 'suppressUpdateExpandStateOnDataLoad');
         apiRemoved(experimental?.externalSort, 'externalSort', 'Use GridModel.externalSort instead');
@@ -1291,6 +1317,19 @@ export class GridModel extends HoistModel {
         return a < b ? -1 : (a > b ? 1 : 0);
     };
 }
+
+/**
+ * @typedef {Object} GridFilterModelConfig
+ * @property {GridModel} c.gridModel - GridModel instance which owns this model.
+ * @property {(Store|View)} c.valueSource - Store or cube View to be used to provide suggested
+ *      data values in column filters (if configured).
+ * @property {(Store|View)} c.target - Store or cube View that should actually be filtered
+ *      as column filters are applied. May be the same as `valueSource`. Provide 'null' if you
+ *      wish to combine this model's filter with other filters, send it to the server, or otherwise
+ *      observe and handle filter changes manually.
+ * @property {(Filter|* |[]|function)} [c.initialFilter] - Configuration for a filter appropriate
+ *      to be rendered and managed by GridFilterModel, or a function to produce the same.
+ */
 
 /**
  * @typedef {Object} ColChooserModelConfig

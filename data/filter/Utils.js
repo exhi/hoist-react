@@ -6,7 +6,7 @@
  */
 
 import {CompoundFilter, FieldFilter, FunctionFilter} from '@xh/hoist/data';
-import {isArray, isFunction} from 'lodash';
+import {flatMap, groupBy, isArray, isFunction} from 'lodash';
 
 /**
  * Parse a filter from an object or array representation.
@@ -50,4 +50,35 @@ export function parseFilter(spec) {
 
     console.error('Unable to identify filter type:', spec);
     return null;
+}
+
+/**
+ * Recursively flatten a CompoundFilter, and return an array of all nested non-Compound filters
+ *
+ * @returns {Filter[]} - array of all nested non compound filters
+ */
+export function flattenFilter(spec) {
+    if (!spec) return [];
+
+    const {filters} = spec;
+    if (!filters) return [spec];
+
+    const ret = [];
+    filters.forEach(it => ret.push(...flattenFilter(it)));
+    return ret;
+}
+
+/**
+ * Recombine FieldFilters with array support on same field into single FieldFilter.
+ * Filters other than array-based FieldFilters will be returned unmodified.
+ *
+ * @returns {Filter[]}
+ */
+export function combineValueFilters(filters = []) {
+    const groupMap = groupBy(filters, ({op, field}) => [op, field].join('|'));
+    return flatMap(groupMap, filters => {
+        return (filters.length > 1 && FieldFilter.ARRAY_OPERATORS.includes(filters[0].op)) ?
+            {...filters[0], value: filters.map(it => it.value)} :
+            filters;
+    });
 }

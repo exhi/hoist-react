@@ -101,6 +101,9 @@ export class Column {
      * @param {boolean} [c.resizable] - false to prevent user from drag-and-drop resizing.
      * @param {boolean} [c.movable] - false to prevent user from drag-and-drop re-ordering.
      * @param {boolean} [c.sortable] - false to prevent user from sorting on this column.
+     * @param {boolean} [c.filterable] - true to enable an Excel-like column header filter menu.
+     *      Menu includes an enumerated, checkbox set filter and a custom input filter dependent on
+     *      for building complex queries.
      * @param {(boolean|string)} [c.pinned] - set to true/'left' or 'right' to pin (aka "lock") the
      *      column to the side of the grid, ensuring it's visible while horizontally scrolling.
      * @param {Column~rendererFn} [c.renderer] - function returning a formatted string for each
@@ -194,6 +197,7 @@ export class Column {
         resizable,
         movable,
         sortable,
+        filterable,
         pinned,
         renderer,
         rendererIsComplex,
@@ -330,6 +334,23 @@ export class Column {
         this.editor = editor;
         this.setValueFn = withDefault(setValueFn, this.defaultSetValueFn);
         this.getValueFn = withDefault(getValueFn, this.defaultGetValueFn);
+
+        if (filterable && XH.isMobileApp) {
+            console.warn(`'filterable' is not supported on mobile and will be ignored.`);
+            filterable = false;
+        }
+
+        if (filterable && this.colId !== this.field) {
+            console.warn(`Column '${this.colId}' is not a Store field. 'filterable' will be ignored.`);
+            filterable = false;
+        }
+
+        if (filterable && this.field === 'cubeLabel') {
+            console.warn(`Column '${this.colId}' is a cube label column. 'filterable' will be ignored.`);
+            filterable = false;
+        }
+
+        this.filterable = withDefault(filterable, false);
 
         this.gridModel = gridModel;
         this.agOptions = agOptions ? clone(agOptions) : {};
@@ -552,7 +573,7 @@ export class Column {
                 const recordA = agNodeA?.data,
                     recordB = agNodeB?.data;
 
-                valueA = this.getSortValue(valueA, recordA),
+                valueA = this.getSortValue(valueA, recordA);
                 valueB = this.getSortValue(valueB, recordB);
 
                 return this.defaultComparator(valueA, valueB);

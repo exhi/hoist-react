@@ -111,8 +111,8 @@ export class ClientErrorsModel extends HoistModel {
         });
 
         this.filterChooserModel = new FilterChooserModel({
-            sourceStore: this.gridModel.store,
-            targetStore: this.gridModel.store,
+            valueSource: this.gridModel.store,
+            target: this.gridModel.store,
             fieldSpecs: [
                 'username',
                 'browser',
