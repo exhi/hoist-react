@@ -99,7 +99,13 @@ export class ActivityTrackingModel extends HoistModel {
             initialValue: this._defaultFilter,
             sourceStore: this.cube.store,
             fieldSpecs: [
-                'category',
+                {
+                    field: 'category',
+                    values: async () => {
+                        const lookups = await XH.fetchJson({url: 'trackLogAdmin/lookups'});
+                        return lookups.categories;
+                    }
+                },
                 'month',
                 'username',
                 'device',
