@@ -53,7 +53,8 @@
     }
 
     .xh-grid-header-sort-icon,
-    .xh-grid-header-menu-icon {
+    .xh-grid-header-menu-icon,
+    .xh-grid-header-expand-collapse-icon {
       color: var(--xh-grid-header-icon-color);
       margin-left: var(--xh-pad-half-px);
       width: 1.5em;
@@ -65,6 +66,12 @@
 
     .xh-grid-header-menu-icon {
       cursor: pointer;
+    }
+
+    .xh-grid-header-expand-collapse-icon {
+      display: flex;
+      margin-left: -9.3px;
+      margin-right: 1px;
     }
   }
 
